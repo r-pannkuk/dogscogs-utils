@@ -86,7 +86,7 @@ class GuildConfig(_GuildConfig):
     trigger: TriggerConfig
 
 
-DEFAULT_GUILD: GuildConfig = {
+DEFAULT_GUILD = GuildConfig(**{
     **_DEFAULT_GUILD,
     "always_list": [],
     "channel_ids": [],
@@ -104,7 +104,7 @@ DEFAULT_GUILD: GuildConfig = {
     "messages": [],
     "name": "Greeting messages",
     "trigger": {"type": ReactType.MESSAGE, "chance": 1.0, "list": []},
-}
+})
 
 
 class ReactCog(DogCog):
