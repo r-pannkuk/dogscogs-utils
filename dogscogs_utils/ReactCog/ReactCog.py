@@ -64,24 +64,26 @@ class EmbedConfig(typing.TypedDict):
 
 
 class TriggerConfig(typing.TypedDict):
-    type: typing.Required[ReactType]
+    type: ReactType
     chance: typing.Union[str, float]
-    list: typing.NotRequired[typing.List[str]]
+    list: typing.Optional[typing.List[str]]
 
 
 class GuildConfig(_GuildConfig):
-    always_list: typing.List[typing.Union[str, int]]
-    channel_ids: typing.List[typing.Union[str, int]]
-    color: typing.Tuple[
-        typing.Annotated[int, "[0,255]"],
-        typing.Annotated[int, "[0,255]"],
-        typing.Annotated[int, "[0,255]"],
+    always_list: typing.Optional[typing.List[typing.Union[str, int]]]
+    channel_ids: typing.Optional[typing.List[typing.Union[str, int]]]
+    color: typing.Optional[
+        typing.Tuple[
+            typing.Annotated[int, "[0,255]"],
+            typing.Annotated[int, "[0,255]"],
+            typing.Annotated[int, "[0,255]"],
+        ]
     ]
-    cooldown: typing.Required[CooldownConfig]
-    embed: EmbedConfig
-    messages: typing.Required[typing.List[str]]
-    name: typing.Required[str]
-    trigger: typing.Required[TriggerConfig]
+    cooldown: CooldownConfig
+    embed: typing.Optional[EmbedConfig]
+    messages: typing.List[str]
+    name: str
+    trigger: TriggerConfig
 
 
 DEFAULT_GUILD: GuildConfig = {
