@@ -4,7 +4,10 @@ from redbot.core import commands
 from redbot.core.bot import Red
 from redbot.core.config import Config, Group, Value as _Value, _ValueCtxManager
 
-DEFAULT_GUILD = {
+class GuildConfig(typing.TypedDict):
+    is_enabled: typing.Required[bool]
+
+DEFAULT_GUILD : GuildConfig = {
     "is_enabled": True
 }
 

@@ -6,7 +6,12 @@ import discord
 from urllib.request import urlopen, Request
 from urllib.error import HTTPError
 
-from DogCog.DogCog import DogCog, DEFAULT_GUILD as _DEFAULT_GUILD, Value
+from DogCog.DogCog import (
+    DogCog,
+    DEFAULT_GUILD as _DEFAULT_GUILD,
+    Value,
+    GuildConfig as _GuildConfig,
+)
 from redbot.core import commands
 from redbot.core.bot import Red
 from redbot.core.config import Config
@@ -47,7 +52,7 @@ class ReactType(Flag):
 
 
 class CooldownConfig(typing.TypedDict):
-    mins: str | float
+    mins: typing.Union[str, float]
     next: float
 
 
@@ -59,12 +64,27 @@ class EmbedConfig(typing.TypedDict):
 
 
 class TriggerConfig(typing.TypedDict):
-    type: ReactType
-    chance: str | float
-    list: typing.Optional[list[str]]
+    type: typing.Required[ReactType]
+    chance: typing.Union[str, float]
+    list: typing.NotRequired[typing.List[str]]
 
 
-DEFAULT_GUILD = {
+class GuildConfig(_GuildConfig):
+    always_list: typing.List[typing.Union[str, int]]
+    channel_ids: typing.List[typing.Union[str, int]]
+    color: typing.Tuple[
+        typing.Annotated[int, "[0,255]"],
+        typing.Annotated[int, "[0,255]"],
+        typing.Annotated[int, "[0,255]"],
+    ]
+    cooldown: typing.Required[CooldownConfig]
+    embed: EmbedConfig
+    messages: typing.Required[typing.List[str]]
+    name: typing.Required[str]
+    trigger: typing.Required[TriggerConfig]
+
+
+DEFAULT_GUILD: GuildConfig = {
     **_DEFAULT_GUILD,
     "always_list": [],
     "channel_ids": [],
@@ -81,7 +101,7 @@ DEFAULT_GUILD = {
     },
     "messages": [],
     "name": "Greeting messages",
-    "trigger": {"type": "", "chance": 1.0, "list": []},
+    "trigger": {"type": ReactType.MESSAGE, "chance": 1.0, "list": []},
 }
 
 
@@ -130,7 +150,7 @@ class ReactCog(DogCog):
         *,
         guild: typing.Optional[discord.Guild],
         ctx: typing.Optional[commands.Context],
-    ) -> Value[list[str | int]]:
+    ) -> Value[list[typing.Union[str, int]]]:
         """Returns the config always list for this cog.
 
         Args:
