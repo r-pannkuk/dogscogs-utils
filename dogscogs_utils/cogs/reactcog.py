@@ -690,14 +690,14 @@ class ReactCog(DogCog):
 
         if member.id in always_list:
             await ctx.send(
-                f"{member.display_name} is already always triggering on **{await self._name(ctx=ctx)().upper()}**."
+                f"{member.display_name} is already always triggering on **{(await self._name(ctx=ctx)()).upper()}**."
             )
             return
 
         always_list.append(member.id)
         await self._always_list(ctx=ctx).set(always_list)
         await ctx.send(
-            f"Added user {member.display_name} to the **{await self._name(ctx=ctx)().upper()}** always triggers list."
+            f"Added user {member.display_name} to the **{(await self._name(ctx=ctx)()).upper()}** always triggers list."
         )
         pass
 
@@ -711,14 +711,14 @@ class ReactCog(DogCog):
 
         if member.id not in always_list:
             await ctx.send(
-                f"{member.display_name} is not triggering on **{await self._name(ctx=ctx)().upper()}**."
+                f"{member.display_name} is not triggering on **{(await self._name(ctx=ctx)()).upper()}**."
             )
             return
 
         always_list.remove(member.id)
         await self._always_list(ctx=ctx).set(always_list)
         await ctx.send(
-            f"Removed {member.display_name} from the **{await self._name(ctx=ctx)().upper()}** always trigger list."
+            f"Removed {member.display_name} from the **{(await self._name(ctx=ctx)()).upper()}** always trigger list."
         )
         pass
 
@@ -726,7 +726,7 @@ class ReactCog(DogCog):
         """Gets the list of random hello messages for the server."""
         trigger_config: TriggerConfig = await self._triggers(ctx=ctx)()
         embed = discord.Embed()
-        embed.title = f"**{await self._name(ctx=ctx)().upper}** Trigger Phrases:"
+        embed.title = f"**{(await self._name(ctx=ctx)()).upper()}** Trigger Phrases:"
 
         phrases = []
 
@@ -753,7 +753,7 @@ class ReactCog(DogCog):
 
         if phrase.lower() in trigger_list:
             await ctx.send(
-                f"``{phrase}`` is already triggering for **{await self._name(ctx=ctx)().upper}**."
+                f"``{phrase}`` is already triggering for **{(await self._name(ctx=ctx)()).upper()}**."
             )
             return
 
@@ -761,7 +761,7 @@ class ReactCog(DogCog):
         trigger_config["list"] = trigger_list
         await self._triggers(ctx=ctx).set(trigger_config)
         await ctx.send(
-            f"Added ``{phrase}`` to the list of **{await self._name(ctx=ctx)().upper}** triggers."
+            f"Added ``{phrase}`` to the list of **{(await self._name(ctx=ctx)()).upper()}** triggers."
         )
         pass
 
@@ -785,7 +785,7 @@ class ReactCog(DogCog):
         else:
             if phrase.lower() not in trigger_list:
                 await ctx.send(
-                    f"``{phrase}`` is not on the **{await self._name(ctx=ctx)().upper}** triggers list."
+                    f"``{phrase}`` is not on the **{(await self._name(ctx=ctx)()).upper()}** triggers list."
                 )
                 return
 
@@ -796,7 +796,7 @@ class ReactCog(DogCog):
         await self._triggers(ctx=ctx).set(trigger_config)
 
         await ctx.send(
-            f"Removed ``{removed_phrase}`` from the list of triggers for **{await self._name(ctx=ctx)().upper}**."
+            f"Removed ``{removed_phrase}`` from the list of triggers for **{(await self._name(ctx=ctx)()).upper()}**."
         )
         pass
 
