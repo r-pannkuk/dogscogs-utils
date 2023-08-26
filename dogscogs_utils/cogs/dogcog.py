@@ -79,7 +79,51 @@ class DogCog(commands.Cog):
             Value[bool]: The enabled value of the config.
         """
         return self._group_guild(guild=guild, ctx=ctx).is_enabled
+    
+    @commands.is_owner()
+    @commands.command()
+    async def clear_all(
+        self, ctx: commands.Context, verbose: typing.Optional[bool] = True
+    ):
+        """Clears all data. WARNING: Irreversible.
 
+        Args:
+            verbose (typing.Optional[bool], optional): Verbose output. Defaults to True.
+        """
+        guild: discord.Guild = ctx.guild
+        await self.config.guild(guild).clear()
+        if verbose:
+            await ctx.send(f"Data cleared for {guild.name}.")
+
+    @commands.is_owner()
+    @commands.command()
+    async def clear_specific(
+        self,
+        ctx: commands.Context,
+        config_type: str,
+        verbose: typing.Optional[bool] = True,
+    ):
+        """Clears specific data for a config. WARNING: Irreversible.
+
+        Args:
+            config (str): The type of config to clear.
+        """
+        config_type = config_type.lower()
+
+        if config_type not in DEFAULT_GUILD.keys():
+            await ctx.send(
+                f"Invalid config type provided, please choose from: `{DEFAULT_GUILD.keys()}`"
+            )
+            return
+
+        guild: discord.Guild = ctx.guild
+        config = DEFAULT_GUILD[config_type]
+        await self.config.guild(guild).get_attr(config_type).set(config)
+        if verbose:
+            await ctx.send(f"Data reset for {config_type} in {guild.name}.")
+
+    @commands.mod_or_permissions(manage_roles=True)
+    @commands.command()
     async def enabled(self, ctx: commands.Context, is_enabled: typing.Optional[bool]):
         """Enables or disables the cog.
 
@@ -102,11 +146,15 @@ class DogCog(commands.Cog):
 
         pass
 
+    @commands.mod_or_permissions(manage_roles=True)
+    @commands.command()
     async def enable(self, ctx: commands.Context):
         """Enables this cog."""
         await self.enabled(ctx, True)
         pass
 
+    @commands.mod_or_permissions(manage_roles=True)
+    @commands.command()
     async def disable(self, ctx: commands.Context):
         """Disables this cog."""
         await self.enabled(ctx, False)
