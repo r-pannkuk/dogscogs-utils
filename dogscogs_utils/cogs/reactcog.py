@@ -263,11 +263,14 @@ class ReactCog(DogCog):
 
     async def response_list(self, ctx: commands.Context):
         """Lists all of the messages that have a chance to be said in response to triggers."""
-        embed = discord.Embed()
-        embed.title = await self._name(ctx=ctx)()
-
         response_list = []
         responses: list[str] = await self._responses(ctx=ctx)()
+
+        if len(responses) == 0:
+            return ctx.send("No responses found.")
+
+        embed = discord.Embed()
+        embed.title = await self._name(ctx=ctx)()
 
         for i in range(len(responses)):
             response_list.append(f"[{i}] {responses[i]}")
@@ -677,7 +680,7 @@ class ReactCog(DogCog):
         await ctx.send(embed=embed)
         pass
 
-    async def always_add(self, ctx: commands.Context, *, member: discord.Member):
+    async def always_add(self, ctx: commands.Context, member: discord.Member):
         """Adds a user to always have hello messages sent to them.
 
         Args:
@@ -698,7 +701,7 @@ class ReactCog(DogCog):
         )
         pass
 
-    async def always_remove(self, ctx: commands.Context, *, member: discord.Member):
+    async def always_remove(self, ctx: commands.Context, member: discord.Member):
         """Removes a user from always being greeted.
 
         Args:
