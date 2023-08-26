@@ -507,7 +507,7 @@ class ReactCog(DogCog):
         embed.description = replace_tokens(
             random.choice(await self._responses(guild=guild)()), member
         )
-        embed.colour = discord.Color.from_rgb(*embed.colour)
+        embed.colour = discord.Color.from_rgb(*(embed.colour or (0, 0, 0)))
 
         if "footer" in embed_config and embed_config["footer"] != "":
             embed.set_footer(
