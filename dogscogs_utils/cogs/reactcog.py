@@ -565,7 +565,7 @@ class ReactCog(DogCog):
         guild = channel.guild
         messages: list[str] = await self._messages(guild=guild)()
         if len(messages) < 1:
-            return
+            return await channel.send("No response messages found.")
 
         embed_config: EmbedConfig = await self._embed(guild=guild)()
 
@@ -896,10 +896,10 @@ class ReactCog(DogCog):
         """
         guild = message.guild
 
-        if not await self._enabled(guild=guild)():
+        if message.author.bot:
             return
 
-        if message.author.bot:
+        if not await self._enabled(guild=guild)():
             return
 
         prefix = await self.bot.get_prefix(message)
