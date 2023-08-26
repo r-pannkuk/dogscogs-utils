@@ -49,8 +49,8 @@ class DogCog(commands.Cog):
     def _group_guild(
         self,
         *,
-        guild: typing.Optional[discord.Guild],
-        ctx: typing.Optional[commands.Context],
+        guild: typing.Optional[discord.Guild] = None,
+        ctx: typing.Optional[commands.Context] = None,
     ) -> Group[discord.Guild, GuildConfig]:
         """Returns the guild config for this cog.
 
@@ -61,13 +61,16 @@ class DogCog(commands.Cog):
         Returns:
             Group: Group config for the guild.
         """
+        if guild is None and ctx is None:
+            raise commands.BadArgument("Must provide either `guild` or `ctx` to call.")
+        
         return self.config.guild(guild or ctx.guild)
 
     def _enabled(
         self,
         *,
-        guild: typing.Optional[discord.Guild],
-        ctx: typing.Optional[commands.Context],
+        guild: typing.Optional[discord.Guild] = None,
+        ctx: typing.Optional[commands.Context] = None,
     ) -> Value[bool]:
         """Returns whether or not this cog is enabled in the config.
 
@@ -78,6 +81,9 @@ class DogCog(commands.Cog):
         Returns:
             Value[bool]: The enabled value of the config.
         """
+        if guild is None and ctx is None:
+            raise commands.BadArgument("Must provide either `guild` or `ctx` to call.")
+        
         return self._group_guild(guild=guild, ctx=ctx).is_enabled
     
     async def clear_all(
@@ -125,7 +131,7 @@ class DogCog(commands.Cog):
             is_enabled (typing.Optional[bool]): (Optional) Whether or not to enable this.
         """
         if is_enabled is None:
-            is_enabled = await self._enabled(ctx)
+            is_enabled = await self._enabled(ctx=ctx)
 
         status_msg = ""
 
@@ -134,7 +140,7 @@ class DogCog(commands.Cog):
         else:
             status_msg = "**DISABLED**"
 
-        await self._enabled(ctx).set(is_enabled)
+        await self._enabled(ctx=ctx).set(is_enabled)
 
         await ctx.send(f"{self.__class__.__name__} is currently {status_msg}.")
 
