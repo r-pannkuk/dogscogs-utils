@@ -86,7 +86,7 @@ class GuildConfig(_GuildConfig):
     trigger: TriggerConfig
 
 
-DEFAULT_GUILD = GuildConfig(**{
+DEFAULT_GUILD: GuildConfig = {
     **_DEFAULT_GUILD,
     "always_list": [],
     "channel_ids": [],
@@ -94,17 +94,17 @@ DEFAULT_GUILD = GuildConfig(**{
     "cooldown": {
         "mins": "1d30",
         "next": 0,
-    },
+    }(CooldownConfig),
     "embed": {
         "use_embed": True,
         "title": "",
         "footer": "",
         "image_url": "",
-    },
+    }(EmbedConfig),
     "messages": [],
     "name": "Greeting messages",
-    "trigger": {"type": ReactType.MESSAGE, "chance": 1.0, "list": []},
-})
+    "trigger": {"type": ReactType.MESSAGE, "chance": 1.0, "list": []}(TriggerConfig),
+}
 
 
 class ReactCog(DogCog):

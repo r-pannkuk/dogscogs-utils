@@ -7,9 +7,9 @@ from redbot.core.config import Config, Group, Value as _Value, _ValueCtxManager
 class GuildConfig(typing.TypedDict):
     is_enabled: bool
 
-DEFAULT_GUILD = GuildConfig(**{
+DEFAULT_GUILD = {
     "is_enabled": True
-})
+}
 
 T = typing.TypeVar('T')
 
