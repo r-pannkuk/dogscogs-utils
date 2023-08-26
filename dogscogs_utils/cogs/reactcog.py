@@ -84,7 +84,7 @@ class ReactCog(DogCog):
     TRIGGER_LENGTH_LIMIT = 6
 
     def __int__(self, bot: Red) -> None:
-        DogCog.__init__(self, bot)
+        super().__init__(bot)
         self.config.register_guild(**ReactCog.DefaultConfig)
         self._ban_cache = {}
 
