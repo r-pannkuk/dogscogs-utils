@@ -1,7 +1,9 @@
+from enum import UNIQUE, Enum, verify
 import typing
 import discord
 
-class Token:
+@verify(UNIQUE)
+class Token(Enum):
     MemberName = "$MEMBER_NAME$"
     ServerName = "$SERVER_NAME$"
     MemberCount = "$MEMBER_COUNT$"
