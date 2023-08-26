@@ -88,11 +88,11 @@ class ReactCog(DogCog):
         self.config.register_guild(**ReactCog.DefaultConfig)
         self._ban_cache = {}
 
-        bot.add_listener(func=self.on_message, name="on_message")
-        bot.add_listener(func=self.on_member_ban, name="on_member_ban")
-        bot.add_listener(func=self.on_member_unban, name="on_member_unban")
-        bot.add_listener(func=self.on_member_join, name="on_member_join")
-        bot.add_listener(func=self.on_member_remove, name="on_member_remove")
+        bot.add_listener(self.on_message, name="on_message")
+        bot.add_listener(self.on_member_ban, name="on_member_ban")
+        bot.add_listener(self.on_member_unban, name="on_member_unban")
+        bot.add_listener(self.on_member_join, name="on_member_join")
+        bot.add_listener(self.on_member_remove, name="on_member_remove")
 
         pass
 
