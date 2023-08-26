@@ -24,7 +24,7 @@ ACTION_TOKEN = "$ACTION$"
 
 
 def replace_tokens(
-    text,
+    text: str,
     member: discord.Member,
     use_mentions: typing.Optional[bool] = False,
     token: typing.Optional[str] = None,
@@ -69,7 +69,7 @@ class TriggerConfig(typing.TypedDict):
     list: typing.Optional[typing.List[str]]
 
 
-class GuildConfig(_GuildConfig):
+class GuildConfig(_GuildConfig, typing.TypedDict):
     always_list: typing.Optional[typing.List[typing.Union[str, int]]]
     channel_ids: typing.Optional[typing.List[typing.Union[str, int]]]
     color: typing.Optional[
@@ -94,16 +94,16 @@ DEFAULT_GUILD: GuildConfig = {
     "cooldown": {
         "mins": "1d30",
         "next": 0,
-    }(CooldownConfig),
+    },
     "embed": {
         "use_embed": True,
         "title": "",
         "footer": "",
-        "image_url": "",
-    }(EmbedConfig),
+        "image_url": ""
+    },
     "messages": [],
     "name": "Greeting messages",
-    "trigger": {"type": ReactType.MESSAGE, "chance": 1.0, "list": []}(TriggerConfig),
+    "trigger": {"type": ReactType.MESSAGE, "chance": 1.0, "list": []},
 }
 
 
@@ -135,7 +135,7 @@ class ReactCog(DogCog):
         *,
         guild: typing.Optional[discord.Guild],
         ctx: typing.Optional[commands.Context],
-    ) -> Value[list[str]]:
+    ) -> Value[typing.List[str]]:
         """Returns the config message list for this cog.
 
         Args:
@@ -152,7 +152,7 @@ class ReactCog(DogCog):
         *,
         guild: typing.Optional[discord.Guild],
         ctx: typing.Optional[commands.Context],
-    ) -> Value[list[typing.Union[str, int]]]:
+    ) -> Value[typing.List[typing.Union[str, int]]]:
         """Returns the config always list for this cog.
 
         Args:
