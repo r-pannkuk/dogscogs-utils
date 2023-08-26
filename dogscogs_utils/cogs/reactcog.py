@@ -60,7 +60,7 @@ class GuildConfig(_GuildConfig, typing.TypedDict):
     ]
     cooldown: CooldownConfig
     embed: typing.Optional[EmbedConfig]
-    messages: typing.List[str]
+    responses: typing.List[str]
     name: str
     trigger: TriggerConfig
 
@@ -76,8 +76,8 @@ class ReactCog(DogCog):
             "next": 0,
         },
         "embed": {"use_embed": True, "title": "", "footer": "", "image_url": ""},
-        "messages": [],
-        "name": "Greeting messages",
+        "responses": [],
+        "name": "",
         "trigger": {"type": ReactType.MESSAGE.value, "chance": 1.0, "list": []},
     }
 
@@ -116,7 +116,7 @@ class ReactCog(DogCog):
             
         return self._group_guild(guild=guild, ctx=ctx).name
 
-    def _messages(
+    def _responses(
         self,
         *,
         guild: typing.Optional[discord.Guild] = None,
@@ -134,7 +134,7 @@ class ReactCog(DogCog):
         if guild is None and ctx is None:
             raise commands.BadArgument("Must provide either `guild` or `ctx` to call.")
 
-        return self._group_guild(guild=guild, ctx=ctx).messages
+        return self._group_guild(guild=guild, ctx=ctx).responses
 
     def _always_list(
         self,
@@ -260,22 +260,22 @@ class ReactCog(DogCog):
         """Toggles the functionality of this trigger on or off."""
         return await DogCog.enable(ctx, not await self._enabled(ctx=ctx)())
 
-    async def message_list(self, ctx: commands.Context):
+    async def response_list(self, ctx: commands.Context):
         """Lists all of the messages that have a chance to be said in response to triggers."""
         embed = discord.Embed()
-        embed.title = self._name(ctx=ctx)()
+        embed.title = await self._name(ctx=ctx)()
 
-        message_list = []
-        messages: list[str] = await self._messages(ctx=ctx)()
+        response_list = []
+        responses: list[str] = await self._responses(ctx=ctx)()
 
-        for i in range(len(messages)):
-            message_list.append(f"[{i}] {messages[i]}")
+        for i in range(len(responses)):
+            response_list.append(f"[{i}] {responses[i]}")
 
-        embed.description = "\n".join(message_list)
+        embed.description = "\n".join(response_list)
 
         return await ctx.send(embed=embed)
 
-    async def message_add(self, ctx: commands.Context, msg: str):
+    async def response_add(self, ctx: commands.Context, msg: str):
         """Adds a new hello message for use in the server.  Use the following escaped strings for values:
         -- ``{Token.MemberName}`` - The target member's name
         -- ``{Token.MemberName}`` - The server name
@@ -284,14 +284,14 @@ class ReactCog(DogCog):
         Args:
         \t\tentry (str): The new hello message to be used at random.
         """
-        messages: list[str] = await self._messages(ctx=ctx)()
-        messages.append(msg)
-        await self._messages(ctx=ctx).set(messages)
+        responses: list[str] = await self._responses(ctx=ctx)()
+        responses.append(msg)
+        await self._responses(ctx=ctx).set(responses)
         return await ctx.send(
             f"Added the following string to {await self._name(ctx=ctx)()}:\n{msg}"
         )
 
-    async def message_remove(self, ctx: commands.Context, index: int):
+    async def response_remove(self, ctx: commands.Context, index: int):
         """Removes a trigger response message.
 
         Args:
@@ -300,14 +300,14 @@ class ReactCog(DogCog):
         Raises:
             commands.BadArgument: If the index is out of range.
         """
-        messages: list[str] = await self._messages(ctx=ctx)()
-        if index >= len(messages):
-            raise commands.BadArgument("Couldn't find the message at the given index.")
+        responses: list[str] = await self._responses(ctx=ctx)()
+        if index >= len(responses):
+            raise commands.BadArgument("Couldn't find the response at the given index.")
 
-        str = messages.pop(index)
+        str = responses.pop(index)
         name = await self._name(ctx=ctx)()
-        if len(messages) == 0:
-            str += f"\n\nYou must have at least one message before {name} will fire."
+        if len(responses) == 0:
+            str += f"\n\nYou must have at least one response before {name} will fire."
 
         return await ctx.send(f"Removed the following string to {name}:\n{str}")
 
@@ -384,7 +384,7 @@ class ReactCog(DogCog):
             f"Currently configured to use {status_msg} {await self._name(ctx=ctx)()}."
         )
 
-    async def image(self, ctx: commands.Context, url: typing.Optional[str] = None):
+    async def embed_image(self, ctx: commands.Context, url: typing.Optional[str] = None):
         """Sets the image used with the trigger response.
 
         Args:
@@ -424,7 +424,7 @@ class ReactCog(DogCog):
                 f"{prefix} using the following image with rich embed {name}:\n{embed['image_url']}"
             )
 
-    async def title(self, ctx: commands.Context, title: typing.Optional[str] = None):
+    async def embed_title(self, ctx: commands.Context, title: typing.Optional[str] = None):
         """Sets the response message title for the trigger action.
 
         Args:
@@ -449,7 +449,7 @@ class ReactCog(DogCog):
                 f"{prefix} using the following title with rich embed {name}:\n{embed['title']}"
             )
 
-    async def footer(self, ctx: commands.Context, footer: typing.Optional[str] = None):
+    async def embed_footer(self, ctx: commands.Context, footer: typing.Optional[str] = None):
         """Sets the footer string for the trigger response.
 
         Args:
@@ -493,12 +493,12 @@ class ReactCog(DogCog):
             reason (str): (Optional) The reason for the trigger.
         """
         guild = channel.guild
-        embed_config: EmbedConfig = self._embed(guild=guild)()
+        embed_config: EmbedConfig = await self._embed(guild=guild)()
         embed = discord.Embed()
 
         embed.title = replace_tokens(embed_config["title"], member)
         embed.description = replace_tokens(
-            random.choice(await self._messages(guild=guild)()), member
+            random.choice(await self._responses(guild=guild)()), member
         )
         embed.colour = discord.Color.from_rgb(*embed["color"])
 
@@ -540,7 +540,7 @@ class ReactCog(DogCog):
         embed_config: EmbedConfig = await self._embed(guild=guild)()
         title = replace_tokens(embed_config["title"], member, use_mentions=True)
         choice = replace_tokens(
-            random.choice(await self._messages(guild=guild)()), member, use_mentions=True
+            random.choice(await self._responses(guild=guild)()), member, use_mentions=True
         )
         return await channel.send(f"{title} {choice}")
 
@@ -563,7 +563,7 @@ class ReactCog(DogCog):
             reason (str): (Optional) The reason for the trigger.
         """
         guild = channel.guild
-        messages: list[str] = await self._messages(guild=guild)()
+        messages: list[str] = await self._responses(guild=guild)()
         if len(messages) < 1:
             return await channel.send("No response messages found.")
 
@@ -653,7 +653,7 @@ class ReactCog(DogCog):
 
     async def always_list(self, ctx: commands.Context):
         """Gets the list of random hello messages for the server."""
-        always_list: typing.List[typing.Union[str, int]] = self._always_list(ctx=ctx)()
+        always_list: typing.List[typing.Union[str, int]] = await self._always_list(ctx=ctx)()
         guild: discord.Guild = ctx.guild
         embed = discord.Embed()
         embed.title = f"Always triggered on the following users:"
@@ -679,7 +679,7 @@ class ReactCog(DogCog):
         Args:
             member (discord.Member): The member to always greet.
         """
-        always_list: typing.List[typing.Union[str, int]] = self._always_list(ctx=ctx)()
+        always_list: typing.List[typing.Union[str, int]] = await self._always_list(ctx=ctx)()
 
         if member.id in always_list:
             await ctx.send(
@@ -700,7 +700,7 @@ class ReactCog(DogCog):
         Args:
             member (discord.Member): The member to remove.
         """
-        always_list: typing.List[typing.Union[str, int]] = self._always_list(ctx=ctx)()
+        always_list: typing.List[typing.Union[str, int]] = await self._always_list(ctx=ctx)()
 
         if member.id not in always_list:
             await ctx.send(
@@ -715,9 +715,9 @@ class ReactCog(DogCog):
         )
         pass
 
-    async def triggers_list(self, ctx: commands.Context):
+    async def trigger_list(self, ctx: commands.Context):
         """Gets the list of random hello messages for the server."""
-        trigger_config: TriggerConfig = self._triggers(ctx=ctx)()
+        trigger_config: TriggerConfig = await self._triggers(ctx=ctx)()
         embed = discord.Embed()
         embed.title = f"**{await self._name(ctx=ctx)().upper}** Trigger Phrases:"
 
@@ -735,13 +735,13 @@ class ReactCog(DogCog):
         await ctx.send(embed=embed)
         pass
 
-    async def triggers_add(self, ctx: commands.Context, *, phrase: str):
+    async def trigger_add(self, ctx: commands.Context, *, phrase: str):
         """Adds a phrase which will trigger Hello messages.
 
         Args:
             phrase (str): The phrase to add for triggering.
         """
-        trigger_config: TriggerConfig = self._triggers(ctx=ctx)()
+        trigger_config: TriggerConfig = await self._triggers(ctx=ctx)()
         trigger_list = trigger_config["list"]
 
         if phrase.lower() in trigger_list:
@@ -758,7 +758,7 @@ class ReactCog(DogCog):
         )
         pass
 
-    async def triggers_remove(
+    async def trigger_remove(
         self, ctx: commands.Context, *, phrase: typing.Union[str, int]
     ):
         """Removes a phrase from triggering hello messages.
@@ -766,7 +766,7 @@ class ReactCog(DogCog):
         Args:
             phrase (str | int): The triggering phrase.
         """
-        trigger_config: TriggerConfig = self._triggers(ctx=ctx)()
+        trigger_config: TriggerConfig = await self._triggers(ctx=ctx)()
         trigger_list = trigger_config["list"]
 
         if isinstance(phrase, int):
@@ -912,9 +912,9 @@ class ReactCog(DogCog):
                 return
 
         content = message.content.lower().split()
-        trigger_config: TriggerConfig = self._triggers(guild=guild)()
-        always_list: typing.List[typing.Union[str, int]] = self._always_list(guild=guild)()
-        cooldown_config: CooldownConfig = self._cooldown(guild=guild)()
+        trigger_config: TriggerConfig = await self._triggers(guild=guild)()
+        always_list: typing.List[typing.Union[str, int]] = await self._always_list(guild=guild)()
+        cooldown_config: CooldownConfig = await self._cooldown(guild=guild)()
 
         if (
             any(
