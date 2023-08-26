@@ -224,9 +224,13 @@ class ReactCog(DogCog, ABC):
         return self._group_guild(guild=guild, ctx=ctx).always_list
 
     async def toggle(self, ctx: commands.Context):
+        """Toggles the functionality of this trigger on or off.
+        """
         return await DogCog.enable(ctx, not await self._enabled(ctx)())
 
     async def message_list(self, ctx: commands.Context):
+        """Lists all of the messages that have a chance to be said in response to triggers.
+        """
         embed = discord.Embed()
         embed.title = self._name(ctx)()
 
@@ -240,20 +244,33 @@ class ReactCog(DogCog, ABC):
 
         return await ctx.send(embed=embed)
 
-    async def message_add(self, ctx: commands.Context, str):
+    async def message_add(self, ctx: commands.Context, msg: str):
+        """Adds a response message to the trigger response list.
+
+        Args:
+            msg (str): The message to respond with.
+        """
         messages: list[str] = await self._messages(ctx)()
-        messages.append(str)
+        messages.append(msg)
         await self._messages(ctx).set(messages)
         return await ctx.send(
-            f"Added the following string to {await self._name(ctx)()}:\n{str}"
+            f"Added the following string to {await self._name(ctx)()}:\n{msg}"
         )
 
-    async def message_remove(self, ctx: commands.Context, int):
+    async def message_remove(self, ctx: commands.Context, index: int):
+        """Removes a trigger response message.
+
+        Args:
+            index (int): The index of the message to remove.
+
+        Raises:
+            commands.BadArgument: If the index is out of range.
+        """
         messages: list[str] = await self._messages(ctx)()
-        if int >= len(messages):
+        if index >= len(messages):
             raise commands.BadArgument("Couldn't find the message at the given index.")
 
-        str = messages.pop(int)
+        str = messages.pop(index)
         name = await self._name(ctx)()
         if len(messages) == 0:
             str += f"\n\nYou must have at least one message before {name} will fire."
@@ -261,6 +278,8 @@ class ReactCog(DogCog, ABC):
         return await ctx.send(f"Removed the following string to {name}:\n{str}")
 
     async def list_channel(self, ctx: commands.Context):
+        """Lists all channels that triggers will respond to.
+        """
         embed = discord.Embed()
         name = await self._name(ctx)()
         embed.title = f"Channels for {name.lower()}:"
@@ -283,6 +302,11 @@ class ReactCog(DogCog, ABC):
         return await ctx.send(embed=embed)
 
     async def add_channel(self, ctx: commands.Context, channel: discord.TextChannel):
+        """Adds a channel to the list of trigger channels.
+
+        Args:
+            channel (discord.TextChannel): The channel to add for triggering in.
+        """
         channel_ids: list[str] = await self._channel_ids(ctx)()
         await self._channel_ids(ctx).set(list(set(channel_ids.append(channel.id))))
         await ctx.send(
@@ -291,6 +315,11 @@ class ReactCog(DogCog, ABC):
         await self.list_channel(ctx)
 
     async def remove_channel(self, ctx: commands.Context, channel: discord.TextChannel):
+        """Removes a channel from the list of trigger channels.
+
+        Args:
+            channel (discord.TextChannel): The channel to respond with triggers in.
+        """
         channel_ids: list[str] = await self._channel_ids(ctx)()
         channel_ids.discard(channel.id)
         await ctx.send(
@@ -301,6 +330,11 @@ class ReactCog(DogCog, ABC):
     async def use_embed(
         self, ctx: commands.Context, bool: typing.Optional[bool] = None
     ):
+        """Sets whether or not to use Rich Embeds for trigger messages.
+
+        Args:
+            bool (bool, optional): Whether or not to use Rich Embeds.
+        """
         embed: EmbedConfig = await self._embed(ctx)()
         if bool is not None:
             embed["use_embed"] = bool
@@ -318,6 +352,11 @@ class ReactCog(DogCog, ABC):
         )
 
     async def image(self, ctx: commands.Context, url: typing.Optional[str] = None):
+        """Sets the image used with the trigger response.
+
+        Args:
+            url (str, optional): The image to use in response messages. Defaults to None.
+        """
         embed: EmbedConfig = await self._embed(ctx)()
         prefix = "Currently"
 
@@ -353,6 +392,11 @@ class ReactCog(DogCog, ABC):
             )
 
     async def title(self, ctx: commands.Context, title: typing.Optional[str] = None):
+        """Sets the response message title for the trigger action.
+
+        Args:
+            title (str): (Optional) The string for the title to be set to.
+        """
         embed: EmbedConfig = await self._embed(ctx)()
         prefix = "Currently"
 
@@ -373,6 +417,11 @@ class ReactCog(DogCog, ABC):
             )
 
     async def footer(self, ctx: commands.Context, footer: typing.Optional[str] = None):
+        """Sets the footer string for the trigger response.
+
+        Args:
+            footer (str): (Optional) The footer to provide.
+        """
         embed: EmbedConfig = await self._embed(ctx)()
         prefix = "Currently"
 
@@ -402,6 +451,15 @@ class ReactCog(DogCog, ABC):
         perp: typing.Optional[discord.Member],
         reason: typing.Optional[str],
     ):
+        """Creates a rich embed to send for the trigger action.
+
+        Args:
+            channel (discord.TextChannel): The channel to send to
+            member (discord.Member): The triggering user
+            action (str): (Optional) The trigger action.
+            perp (discord.Member): (Optional) The perpetrator user.
+            reason (str): (Optional) The reason for the trigger.
+        """
         embed_config: EmbedConfig = self._embed(ctx)()
         embed = discord.Embed()
 
@@ -439,6 +497,12 @@ class ReactCog(DogCog, ABC):
     async def create_simple(
         self, ctx, channel: discord.TextChannel, member: discord.Member
     ):
+        """Creates a simple text message for the trigger action.
+
+        Args:
+            channel (discord.TextChannel): The channel to send to.
+            member (discord.Member): The triggering user.
+        """
         embed_config: EmbedConfig = await self._embed(ctx)()
         title = replace_tokens(embed_config["title"], member, use_mentions=True)
         choice = replace_tokens(
@@ -456,6 +520,15 @@ class ReactCog(DogCog, ABC):
         perp: typing.Optional[discord.Member],
         reason: typing.Optional[str],
     ):
+        """Creates a trigger message.
+
+        Args:
+            channel (discord.TextChannel): The channel to post it in.
+            member (discord.Member): The member who triggered.
+            action (str): (Optional) The action of the trigger.
+            perp (discord.Member): (Optional) The perpetrator of the trigger.
+            reason (str): (Optional) The reason for the trigger.
+        """
         messages: list[str] = await self._messages(ctx)()
         if len(messages) < 1:
             return
@@ -468,6 +541,11 @@ class ReactCog(DogCog, ABC):
             return await self.create_simple(ctx, channel, member)
 
     async def template(self, ctx: commands.Context, channel: discord.TextChannel):
+        """Creates a template based off the given configuration.
+
+        Args:
+            channel (discord.TextChannel): The text channel to send it to.
+        """
         member = SimpleNamespace(
             **{
                 "display_name": Token.MemberName,
@@ -483,14 +561,16 @@ class ReactCog(DogCog, ABC):
     async def chance(
         self,
         ctx: commands.Context,
-        chance: typing.Optional[typing.Union[float, str]] = None,
+        chance: typing.Optional[Percent] = None,
     ):
+        """Sets the random chance that the greeter will go off.
+
+        Args:
+            chance (float | Percentage): A percent between 0.00 and 1.00 or 0% and 100%
+        """
         triggers: TriggerConfig = await self._triggers(ctx)()
 
         if chance is not None:
-            if chance <= 0 or chance > 1.0:
-                raise commands.BadArgument("Chance must be between (0, 1]")
-
             triggers["chance"] = chance
 
             await self._triggers(ctx).set(triggers)
