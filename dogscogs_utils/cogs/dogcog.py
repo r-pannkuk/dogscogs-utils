@@ -33,7 +33,7 @@ class Group(typing.Generic[GroupType, ConfigType], _Group):
         return super().__getattr__(item)
 
 
-class DogCog(ABC, commands.Cog):
+class DogCog(commands.Cog, ABC):
     """Generic cog for Dog Cog development."""
 
     DefaultConfig : GuildConfig = {
