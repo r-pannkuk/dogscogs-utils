@@ -1,3 +1,4 @@
+from abc import ABC
 from enum import Flag, auto
 import random
 from types import SimpleNamespace
@@ -6,41 +7,15 @@ import discord
 from urllib.request import urlopen, Request
 from urllib.error import HTTPError
 
+from redbot.core import commands
+from redbot.core.bot import Red
+
 from .dogcog import (
     DogCog,
-    DEFAULT_GUILD as _DEFAULT_GUILD,
     Value,
     GuildConfig as _GuildConfig,
 )
-from redbot.core import commands
-from redbot.core.bot import Red
-from redbot.core.config import Config
-
-
-MEMBER_NAME_TOKEN = "$MEMBER_NAME$"
-SERVER_NAME_TOKEN = "$SERVER_NAME$"
-MEMBER_COUNT_TOKEN = "$MEMBER_COUNT$"
-ACTION_TOKEN = "$ACTION$"
-
-
-def replace_tokens(
-    text: str,
-    member: discord.Member,
-    use_mentions: typing.Optional[bool] = False,
-    token: typing.Optional[str] = None,
-):
-    if token is not None:
-        return text.replace(
-            token,
-        )
-    return (
-        text.replace(
-            MEMBER_NAME_TOKEN,
-            member.display_name if not use_mentions else member.mention,
-        )
-        .replace(SERVER_NAME_TOKEN, member.guild.name)
-        .replace(MEMBER_COUNT_TOKEN, str(member.guild.member_count))
-    )
+from ..adapters.parsers import Token, replace_tokens
 
 
 class ReactType(Flag):
@@ -86,8 +61,9 @@ class GuildConfig(_GuildConfig, typing.TypedDict):
     trigger: TriggerConfig
 
 
-DEFAULT_GUILD: GuildConfig = {
-    **_DEFAULT_GUILD,
+class ReactCog(DogCog, ABC):
+    DefaultConfig: GuildConfig = {
+    **DogCog.DefaultConfig,
     "always_list": [],
     "channel_ids": [],
     "color": discord.Color.lighter_grey().to_rgb(),
@@ -106,11 +82,9 @@ DEFAULT_GUILD: GuildConfig = {
     "trigger": {"type": ReactType.MESSAGE, "chance": 1.0, "list": []},
 }
 
-
-class ReactCog(DogCog):
     def __int__(self, bot: Red) -> None:
         DogCog.__init__(self, bot)
-        self.config.register_guild(**DEFAULT_GUILD)
+        self.config.register_guild(**ReactCog.DefaultConfig)
         pass
 
     def _name(
@@ -469,8 +443,8 @@ class ReactCog(DogCog):
             embed.set_thumbnail(url=embed_config["image_url"])
 
         if action:
-            embed.description = embed.description.replace(ACTION_TOKEN, action)
-            embed.title = embed.title.replace(ACTION_TOKEN, action)
+            embed.description = embed.description.replace(Token.Action, action)
+            embed.title = embed.title.replace(Token.Action, action)
 
         if perp:
             embed.add_field(
@@ -518,9 +492,9 @@ class ReactCog(DogCog):
     async def template(self, ctx: commands.Context, channel: discord.TextChannel):
         member = SimpleNamespace(
             **{
-                "display_name": MEMBER_NAME_TOKEN,
+                "display_name": Token.MemberName,
                 "guild": SimpleNamespace(
-                    **{"name": SERVER_NAME_TOKEN, "member_count": MEMBER_COUNT_TOKEN}
+                    **{"name": Token.ServerName, "member_count": Token.MemberCount}
                 ),
                 "avatar_url": self.bot.user.avatar.url,
                 "mention": "$MEMBER_MENTION$",

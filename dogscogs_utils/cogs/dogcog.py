@@ -1,3 +1,4 @@
+from abc import ABC
 import typing
 from typing import Union
 import discord
@@ -8,9 +9,6 @@ from redbot.core.config import Config, Group as _Group, Value as _Value
 
 class GuildConfig(typing.TypedDict):
     is_enabled: bool
-
-
-DEFAULT_GUILD: GuildConfig = {"is_enabled": True}
 
 ValueType = typing.TypeVar("ValueType")
 GroupType = typing.TypeVar("GroupType", discord.Guild, discord.TextChannel, discord.User, discord.Member, discord.Role)
@@ -35,8 +33,12 @@ class Group(typing.Generic[GroupType, ConfigType], _Group):
         return super().__getattr__(item)
 
 
-class DogCog(commands.Cog):
+class DogCog(ABC, commands.Cog):
     """Generic cog for Dog Cog development."""
+
+    DefaultConfig : GuildConfig = {
+        "is_enabled": True
+    }
 
     def __init__(self, bot: Red) -> None:
         self.bot = bot
@@ -80,8 +82,6 @@ class DogCog(commands.Cog):
         """
         return self._group_guild(guild=guild, ctx=ctx).is_enabled
     
-    @commands.is_owner()
-    @commands.command()
     async def clear_all(
         self, ctx: commands.Context, verbose: typing.Optional[bool] = True
     ):
@@ -95,8 +95,6 @@ class DogCog(commands.Cog):
         if verbose:
             await ctx.send(f"Data cleared for {guild.name}.")
 
-    @commands.is_owner()
-    @commands.command()
     async def clear_specific(
         self,
         ctx: commands.Context,
@@ -110,20 +108,18 @@ class DogCog(commands.Cog):
         """
         config_type = config_type.lower()
 
-        if config_type not in DEFAULT_GUILD.keys():
+        if config_type not in DogCog.DefaultConfig.keys():
             await ctx.send(
-                f"Invalid config type provided, please choose from: `{DEFAULT_GUILD.keys()}`"
+                f"Invalid config type provided, please choose from: `{DogCog.DefaultConfig.keys()}`"
             )
             return
 
         guild: discord.Guild = ctx.guild
-        config = DEFAULT_GUILD[config_type]
+        config = DogCog.DefaultConfig[config_type]
         await self.config.guild(guild).get_attr(config_type).set(config)
         if verbose:
             await ctx.send(f"Data reset for {config_type} in {guild.name}.")
 
-    @commands.mod_or_permissions(manage_roles=True)
-    @commands.command()
     async def enabled(self, ctx: commands.Context, is_enabled: typing.Optional[bool]):
         """Enables or disables the cog.
 
@@ -146,15 +142,11 @@ class DogCog(commands.Cog):
 
         pass
 
-    @commands.mod_or_permissions(manage_roles=True)
-    @commands.command()
     async def enable(self, ctx: commands.Context):
         """Enables this cog."""
         await self.enabled(ctx, True)
         pass
 
-    @commands.mod_or_permissions(manage_roles=True)
-    @commands.command()
     async def disable(self, ctx: commands.Context):
         """Disables this cog."""
         await self.enabled(ctx, False)
