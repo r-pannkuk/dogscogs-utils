@@ -1,6 +1,4 @@
-from abc import ABC
 import typing
-from typing import Union
 import discord
 from redbot.core import commands
 from redbot.core.bot import Red
@@ -33,7 +31,7 @@ class Group(typing.Generic[GroupType, ConfigType], _Group):
         return super().__getattr__(item)
 
 
-class DogCog(commands.Cog, ABC):
+class DogCog(commands.Cog):
     """Generic cog for Dog Cog development."""
 
     DefaultConfig : GuildConfig = {
@@ -41,7 +39,6 @@ class DogCog(commands.Cog, ABC):
     }
 
     def __init__(self, bot: Red) -> None:
-        __metaclass__ = commands.Cog
         self.bot = bot
         self.config = Config.get_conf(
             self,

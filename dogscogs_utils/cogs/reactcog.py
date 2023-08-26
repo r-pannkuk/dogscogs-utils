@@ -1,4 +1,3 @@
-from abc import ABC
 from datetime import datetime, timedelta
 from enum import Flag, auto
 import random
@@ -66,7 +65,7 @@ class GuildConfig(_GuildConfig, typing.TypedDict):
     trigger: TriggerConfig
 
 
-class ReactCog(DogCog, ABC):
+class ReactCog(DogCog):
     DefaultConfig: GuildConfig = {
         **DogCog.DefaultConfig,
         "always_list": [],
@@ -86,7 +85,6 @@ class ReactCog(DogCog, ABC):
 
     def __int__(self, bot: Red) -> None:
         DogCog.__init__(self, bot)
-        __metaclass__ = DogCog
         self.config.register_guild(**ReactCog.DefaultConfig)
         self._ban_cache = {}
 
