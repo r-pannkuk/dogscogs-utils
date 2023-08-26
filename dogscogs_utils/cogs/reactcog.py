@@ -261,6 +261,7 @@ class ReactCog(DogCog):
             Args:
             \t\tentry (str): The new hello message to be used at random.
             """
+            return obj
 
         return dec
 
@@ -576,7 +577,7 @@ class ReactCog(DogCog):
                 "guild": SimpleNamespace(
                     **{"name": Token.ServerName, "member_count": Token.MemberCount}
                 ),
-                "avatar_url": self.bot.user.avatar.url,
+                "avatar_url": self.bot.user.display_avatar.url,
                 "mention": "$MEMBER_MENTION$",
             }
         )
