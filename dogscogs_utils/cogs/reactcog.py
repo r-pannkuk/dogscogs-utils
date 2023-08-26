@@ -86,6 +86,7 @@ class ReactCog(DogCog, ABC):
 
     def __int__(self, bot: Red) -> None:
         DogCog.__init__(self, bot)
+        __metaclass__ = DogCog
         self.config.register_guild(**ReactCog.DefaultConfig)
         self._ban_cache = {}
 
