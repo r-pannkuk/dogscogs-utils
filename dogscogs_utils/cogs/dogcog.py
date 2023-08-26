@@ -61,7 +61,7 @@ class DogCog(commands.Cog):
         Returns:
             Group: Group config for the guild.
         """
-        return self.config.guild(guild | ctx.guild)
+        return self.config.guild(guild or ctx.guild)
 
     def _enabled(
         self,
