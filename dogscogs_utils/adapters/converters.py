@@ -7,4 +7,4 @@ class Percent(commands.Converter):
                 return float(argument[:-1]) / 100
             return float(argument)
         except:
-            return None
+            raise commands.BadArgument("Chance must be between (0, 1]")
