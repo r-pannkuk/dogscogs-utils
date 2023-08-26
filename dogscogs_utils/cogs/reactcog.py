@@ -570,9 +570,9 @@ class ReactCog(DogCog):
         embed_config: EmbedConfig = await self._embed(guild)()
 
         if embed_config["use_embed"]:
-            return await self.create_embed(channel, member, action, perp, reason)
+            return await self.create_embed(channel=channel, member=member, action=action, perp=perp, reason=reason)
         else:
-            return await self.create_simple(channel, member)
+            return await self.create_simple(channel=channel, member=member)
 
     async def template(self, ctx: commands.Context, channel: discord.TextChannel):
         """Creates a template based off the given configuration.
@@ -590,7 +590,7 @@ class ReactCog(DogCog):
                 "mention": "$MEMBER_MENTION$",
             }
         )
-        return await self.create(ctx, channel, member)
+        return await self.create(channel=channel, member=member)
 
     async def chance(
         self,
