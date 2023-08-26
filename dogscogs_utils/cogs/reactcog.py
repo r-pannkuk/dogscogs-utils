@@ -1,4 +1,5 @@
 from abc import ABC
+from datetime import datetime, timedelta
 from enum import Flag, auto
 import random
 from types import SimpleNamespace
@@ -6,9 +7,12 @@ import typing
 import discord
 from urllib.request import urlopen, Request
 from urllib.error import HTTPError
+import d20
 
 from redbot.core import commands
 from redbot.core.bot import Red
+
+from dogscogs_utils.adapters.converters import Percent
 
 from .dogcog import (
     DogCog,
@@ -29,6 +33,7 @@ class ReactType(Flag):
 class CooldownConfig(typing.TypedDict):
     mins: typing.Union[str, float]
     next: float
+    last_timestamp: float
 
 
 class EmbedConfig(typing.TypedDict):
@@ -63,24 +68,19 @@ class GuildConfig(_GuildConfig, typing.TypedDict):
 
 class ReactCog(DogCog, ABC):
     DefaultConfig: GuildConfig = {
-    **DogCog.DefaultConfig,
-    "always_list": [],
-    "channel_ids": [],
-    "color": discord.Color.lighter_grey().to_rgb(),
-    "cooldown": {
-        "mins": "1d30",
-        "next": 0,
-    },
-    "embed": {
-        "use_embed": True,
-        "title": "",
-        "footer": "",
-        "image_url": ""
-    },
-    "messages": [],
-    "name": "Greeting messages",
-    "trigger": {"type": ReactType.MESSAGE, "chance": 1.0, "list": []},
-}
+        **DogCog.DefaultConfig,
+        "always_list": [],
+        "channel_ids": [],
+        "color": discord.Color.lighter_grey().to_rgb(),
+        "cooldown": {
+            "mins": "1d30",
+            "next": 0,
+        },
+        "embed": {"use_embed": True, "title": "", "footer": "", "image_url": ""},
+        "messages": [],
+        "name": "Greeting messages",
+        "trigger": {"type": ReactType.MESSAGE, "chance": 1.0, "list": []},
+    }
 
     def __int__(self, bot: Red) -> None:
         DogCog.__init__(self, bot)
@@ -228,7 +228,7 @@ class ReactCog(DogCog, ABC):
 
     async def message_list(self, ctx: commands.Context):
         embed = discord.Embed()
-        embed.title = await self._title(ctx)()
+        embed.title = self._name(ctx)()
 
         message_list = []
         messages: list[str] = await self._messages(ctx)()
@@ -316,28 +316,6 @@ class ReactCog(DogCog, ABC):
         return await ctx.send(
             f"Currently configured to use {status_msg} {await self._name(ctx)()}."
         )
-
-    async def chance(
-        self,
-        ctx: commands.Context,
-        chance: typing.Optional[typing.Union[float, str]] = None,
-    ):
-        triggers: TriggerConfig = await self._triggers(ctx)()
-
-        if chance is not None:
-            if chance <= 0 or chance > 1.0:
-                raise commands.BadArgument("Chance must be between (0, 1]")
-
-            triggers["chance"] = chance
-
-            await self._triggers(ctx).set(triggers)
-
-        if isinstance(triggers["chance"], float):
-            chance_str = f"{triggers['chance'] * 100}%"
-        else:
-            chance_str = triggers["chance"]
-
-        return await ctx.send(f"The chance to greet users set to {chance_str}.")
 
     async def image(self, ctx: commands.Context, url: typing.Optional[str] = None):
         embed: EmbedConfig = await self._embed(ctx)()
@@ -501,3 +479,188 @@ class ReactCog(DogCog, ABC):
             }
         )
         return await self.create(ctx, channel, member)
+
+    async def chance(
+        self,
+        ctx: commands.Context,
+        chance: typing.Optional[typing.Union[float, str]] = None,
+    ):
+        triggers: TriggerConfig = await self._triggers(ctx)()
+
+        if chance is not None:
+            if chance <= 0 or chance > 1.0:
+                raise commands.BadArgument("Chance must be between (0, 1]")
+
+            triggers["chance"] = chance
+
+            await self._triggers(ctx).set(triggers)
+
+        if isinstance(triggers["chance"], float):
+            chance_str = f"{triggers['chance'] * 100}%"
+        else:
+            chance_str = triggers["chance"]
+
+        return await ctx.send(f"The chance to greet users set to {chance_str}.")
+
+    async def cooldown(self, ctx: commands.Context, *, cooldown: typing.Optional[str]):
+        """Sets the cooldown used by the greeter.
+
+        Args:
+            cooldown (str): The cooldown amount; either a number or an RNG dice amount (1d30 for random within 30 minutes).
+        """
+        cooldown_config: CooldownConfig = await self._cooldown(ctx)()
+
+        if cooldown is not None:
+            try:
+                parsed = d20.parse(cooldown)
+            except d20.RollSyntaxError as e:
+                await ctx.send(
+                    "ERROR: Please enter a valid cooldown using dice notation or a number."
+                )
+                return
+
+            cooldown_config["mins"] = cooldown
+
+            # Moving the cooldown to whatever the new amount is.
+            if cooldown_config["next"] > datetime.now().timestamp():
+                cooldown_config["next"] = (
+                    datetime.fromtimestamp(cooldown_config["last_timestamp"])
+                    + timedelta(minutes=d20.roll(cooldown).total)
+                ).timestamp()
+
+            await self._cooldown(ctx).set(cooldown_config)
+
+            await ctx.send(f"Set the cooldown to greet users to {cooldown} minutes.")
+        else:
+            await ctx.send(
+                f"The chance to greet users is currently {cooldown_config['mins']} minutes."
+            )
+        pass
+
+    async def always_list(self, ctx: commands.Context):
+        """Gets the list of random hello messages for the server."""
+        always_list: typing.List[typing.Union[str, int]] = self._always_list(ctx)()
+        guild: discord.Guild = ctx.guild
+        embed = discord.Embed()
+        embed.title = f"Always triggered on the following users:"
+
+        users = []
+
+        for i in range(len(always_list)):
+            member: discord.Member = guild.get_member(always_list[i])
+
+            if member is None:
+                continue
+
+            users.append(f"[{i}] {member.mention}")
+
+        embed.description = "\n".join(users)
+
+        await ctx.send(embed=embed)
+        pass
+
+    async def always_add(self, ctx: commands.Context, *, member: discord.Member):
+        """Adds a user to always have hello messages sent to them.
+
+        Args:
+            member (discord.Member): The member to always greet.
+        """
+        always_list: typing.List[typing.Union[str, int]] = self._always_list(ctx)()
+
+        if member.id in always_list:
+            await ctx.send(f"{member.display_name} is already always triggering on **{await self._name(ctx)().upper()}**.")
+            return
+
+        always_list.append(member.id)
+        await self._always_list(ctx).set(always_list)
+        await ctx.send(f"Added user {member.display_name} to the **{await self._name(ctx)().upper()}** always triggers list.")
+        pass
+
+    async def always_remove(self, ctx: commands.Context, *, member: discord.Member):
+        """Removes a user from always being greeted.
+
+        Args:
+            member (discord.Member): The member to remove.
+        """
+        always_list: typing.List[typing.Union[str, int]] = self._always_list(ctx)()
+
+        if member.id not in always_list:
+            await ctx.send(f"{member.display_name} is not triggering on **{await self._name(ctx)().upper()}**.")
+            return
+
+        always_list.remove(member.id)
+        await self._always_list(ctx).set(always_list)
+        await ctx.send(
+            f"Removed {member.display_name} from the **{await self._name(ctx)().upper()}** always trigger list."
+        )
+        pass
+
+    async def triggers_list(self, ctx: commands.Context):
+        """Gets the list of random hello messages for the server."""
+        trigger_config : TriggerConfig = self._triggers(ctx)()
+        embed = discord.Embed()
+        embed.title = f"**{await self._name(ctx)().upper}** Trigger Phrases:"
+
+        phrases = []
+
+        trigger_list = trigger_config["list"]
+
+        for i in range(len(trigger_list)):
+            phrase = trigger_list[i]
+
+            phrases.append(f"[{i}] {phrase}")
+
+        embed.description = "\n".join(phrases)
+
+        await ctx.send(embed=embed)
+        pass
+
+    async def triggers_add(self, ctx: commands.Context, *, phrase: str):
+        """Adds a phrase which will trigger Hello messages.
+
+        Args:
+            phrase (str): The phrase to add for triggering.
+        """
+        trigger_config : TriggerConfig = self._triggers(ctx)()
+        trigger_list = trigger_config["list"]
+
+        if phrase.lower() in trigger_list:
+            await ctx.send(f"``{phrase}`` is already triggering for **{await self._name(ctx)().upper}**.")
+            return
+
+        trigger_list.append(phrase.lower())
+        trigger_config["list"] = trigger_list
+        await self._triggers(ctx).set(trigger_config)
+        await ctx.send(f"Added ``{phrase}`` to the list of **{await self._name(ctx)().upper}** triggers.")
+        pass
+
+    async def triggers_remove(self, ctx: commands.Context, *, phrase: typing.Union[str, int]):
+        """Removes a phrase from triggering hello messages.
+
+        Args:
+            phrase (str | int): The triggering phrase.
+        """
+        trigger_config : TriggerConfig = self._triggers(ctx)()
+        trigger_list = trigger_config["list"]
+
+        if isinstance(phrase, int):
+            if phrase >= len(trigger_list):
+                await ctx.send(f"``{phrase}`` is out of range.")
+                return
+
+            removed_phrase = trigger_list.pop(phrase)
+        else:
+            if phrase.lower() not in trigger_list:
+                await ctx.send(f"``{phrase}`` is not on the **{await self._name(ctx)().upper}** triggers list.")
+                return
+
+            removed_phrase = trigger_list.remove(phrase.lower())
+
+        trigger_list.append(phrase.lower())
+        trigger_config["list"] = trigger_list
+        await self._triggers(ctx).set(trigger_config)        
+        
+        await ctx.send(
+            f"Removed ``{removed_phrase}`` from the list of triggers for **{await self._name(ctx)().upper}**."
+        )
+        pass
