@@ -41,6 +41,7 @@ class DogCog(commands.Cog, ABC):
     }
 
     def __init__(self, bot: Red) -> None:
+        __metaclass__ = commands.Cog
         self.bot = bot
         self.config = Config.get_conf(
             self,
