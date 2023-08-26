@@ -78,7 +78,7 @@ class ReactCog(DogCog):
         "embed": {"use_embed": True, "title": "", "footer": "", "image_url": ""},
         "messages": [],
         "name": "Greeting messages",
-        "trigger": {"type": ReactType.MESSAGE, "chance": 1.0, "list": []},
+        "trigger": {"type": ReactType.MESSAGE.value, "chance": 1.0, "list": []},
     }
 
     TRIGGER_LENGTH_LIMIT = 6
