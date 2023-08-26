@@ -1,12 +1,12 @@
 from datetime import datetime, timedelta
-from enum import UNIQUE, Enum, verify
+from enum import UNIQUE, StrEnum, verify
 import typing
 import discord
 import pytz
 
 
 @verify(UNIQUE)
-class Token(Enum):
+class Token(StrEnum):
     MemberName = "$MEMBER_NAME$"
     ServerName = "$SERVER_NAME$"
     MemberCount = "$MEMBER_COUNT$"
@@ -25,11 +25,11 @@ def replace_tokens(
         )
     return (
         text.replace(
-            Token.MemberName,
+            Token.MemberName.value,
             member.display_name if not use_mentions else member.mention,
         )
-        .replace(Token.ServerName, member.guild.name)
-        .replace(Token.MemberCount, str(member.guild.member_count))
+        .replace(Token.ServerName.value, member.guild.name)
+        .replace(Token.MemberCount.value, str(member.guild.member_count))
     )
 
 
