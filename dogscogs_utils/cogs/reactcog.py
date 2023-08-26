@@ -99,8 +99,8 @@ class ReactCog(DogCog):
     def _name(
         self,
         *,
-        guild: typing.Optional[discord.Guild],
-        ctx: typing.Optional[commands.Context],
+        guild: typing.Optional[discord.Guild] = None,
+        ctx: typing.Optional[commands.Context] = None,
     ) -> Value[str]:
         """Returns the config name for this cog.
 
@@ -111,13 +111,16 @@ class ReactCog(DogCog):
         Returns:
             str: The name config value.
         """
+        if guild is None and ctx is None:
+            raise commands.BadArgument("Must provide either `guild` or `ctx` to call.")
+            
         return self._group_guild(guild=guild, ctx=ctx).name
 
     def _messages(
         self,
         *,
-        guild: typing.Optional[discord.Guild],
-        ctx: typing.Optional[commands.Context],
+        guild: typing.Optional[discord.Guild] = None,
+        ctx: typing.Optional[commands.Context] = None,
     ) -> Value[typing.List[str]]:
         """Returns the config message list for this cog.
 
@@ -128,13 +131,16 @@ class ReactCog(DogCog):
         Returns:
             list[str]: The messages config value.
         """
+        if guild is None and ctx is None:
+            raise commands.BadArgument("Must provide either `guild` or `ctx` to call.")
+
         return self._group_guild(guild=guild, ctx=ctx).messages
 
     def _always_list(
         self,
         *,
-        guild: typing.Optional[discord.Guild],
-        ctx: typing.Optional[commands.Context],
+        guild: typing.Optional[discord.Guild] = None,
+        ctx: typing.Optional[commands.Context] = None,
     ) -> Value[typing.List[typing.Union[str, int]]]:
         """Returns the config always list for this cog.
 
@@ -145,13 +151,16 @@ class ReactCog(DogCog):
         Returns:
             list[id]: The list of user ids in the always list.
         """
+        if guild is None and ctx is None:
+            raise commands.BadArgument("Must provide either `guild` or `ctx` to call.")
+
         return self._group_guild(guild=guild, ctx=ctx).always_list
 
     def _channel_ids(
         self,
         *,
-        guild: typing.Optional[discord.Guild],
-        ctx: typing.Optional[commands.Context],
+        guild: typing.Optional[discord.Guild] = None,
+        ctx: typing.Optional[commands.Context] = None,
     ) -> Value[typing.List[typing.Union[str, int]]]:
         """Returns the list of channel ids to respond to for this cog.
 
@@ -162,13 +171,16 @@ class ReactCog(DogCog):
         Returns:
             list[id]: The list of channel ids this cog should echo into.
         """
+        if guild is None and ctx is None:
+            raise commands.BadArgument("Must provide either `guild` or `ctx` to call.")
+        
         return self._group_guild(guild=guild, ctx=ctx).channel_ids
 
     def _color(
         self,
         *,
-        guild: typing.Optional[discord.Guild],
-        ctx: typing.Optional[commands.Context],
+        guild: typing.Optional[discord.Guild] = None,
+        ctx: typing.Optional[commands.Context] = None,
     ) -> Value[typing.Tuple[int, int, int]]:
         """Returns the color for this cog.
 
@@ -179,13 +191,16 @@ class ReactCog(DogCog):
         Returns:
             Color: The color of embeds this cog uses.
         """
+        if guild is None and ctx is None:
+            raise commands.BadArgument("Must provide either `guild` or `ctx` to call.")
+
         return self._group_guild(guild=guild, ctx=ctx).color
 
     def _cooldown(
         self,
         *,
-        guild: typing.Optional[discord.Guild],
-        ctx: typing.Optional[commands.Context],
+        guild: typing.Optional[discord.Guild] = None,
+        ctx: typing.Optional[commands.Context] = None,
     ) -> Value[CooldownConfig]:
         """Returns the cooldown object of this cog.
 
@@ -196,13 +211,16 @@ class ReactCog(DogCog):
         Returns:
             CooldownConfig: The cooldown parameters of this cog.
         """
+        if guild is None and ctx is None:
+            raise commands.BadArgument("Must provide either `guild` or `ctx` to call.")
+
         return self._group_guild(guild=guild, ctx=ctx).cooldown
 
     def _embed(
         self,
         *,
-        guild: typing.Optional[discord.Guild],
-        ctx: typing.Optional[commands.Context],
+        guild: typing.Optional[discord.Guild] = None,
+        ctx: typing.Optional[commands.Context] = None,
     ) -> Value[EmbedConfig]:
         """Returns the embed object of this cog.
 
@@ -213,13 +231,16 @@ class ReactCog(DogCog):
         Returns:
             EmbedConfig: The embed parameters of this cog.
         """
+        if guild is None and ctx is None:
+            raise commands.BadArgument("Must provide either `guild` or `ctx` to call.")
+
         return self._group_guild(guild=guild, ctx=ctx).embed
 
     def _triggers(
         self,
         *,
-        guild: typing.Optional[discord.Guild],
-        ctx: typing.Optional[commands.Context],
+        guild: typing.Optional[discord.Guild] = None,
+        ctx: typing.Optional[commands.Context] = None,
     ) -> Value[TriggerConfig]:
         """Returns the trigger config for this cog.
 
@@ -230,6 +251,9 @@ class ReactCog(DogCog):
         Returns:
             TriggerConfig: The list of user ids in the always list.
         """
+        if guild is None and ctx is None:
+            raise commands.BadArgument("Must provide either `guild` or `ctx` to call.")
+
         return self._group_guild(guild=guild, ctx=ctx).always_list
 
     async def toggle(self, ctx: commands.Context):
@@ -251,21 +275,6 @@ class ReactCog(DogCog):
 
         return await ctx.send(embed=embed)
 
-    def __tokenize_docstring():
-        def dec(obj):
-            obj.__doc__ = f"""Adds a new hello message for use in the server.  Use the following escaped strings for values:
-            -- ``{Token.MemberName}`` - The target member's name
-            -- ``{Token.MemberName}`` - The server name
-            -- ``{Token.MemberName}`` - The server member count
-
-            Args:
-            \t\tentry (str): The new hello message to be used at random.
-            """
-            return obj
-
-        return dec
-
-    @__tokenize_docstring()
     async def message_add(self, ctx: commands.Context, msg: str):
         """Adds a new hello message for use in the server.  Use the following escaped strings for values:
         -- ``{Token.MemberName}`` - The target member's name
@@ -470,9 +479,9 @@ class ReactCog(DogCog):
         *,
         channel: discord.TextChannel,
         member: discord.Member,
-        action: typing.Optional[str],
-        perp: typing.Optional[discord.Member],
-        reason: typing.Optional[str],
+        action: typing.Optional[str] = None,
+        perp: typing.Optional[discord.Member] = None,
+        reason: typing.Optional[str] = None,
     ):
         """Creates a rich embed to send for the trigger action.
 
@@ -540,9 +549,9 @@ class ReactCog(DogCog):
         *,
         channel: discord.TextChannel,
         member: discord.Member,
-        action: typing.Optional[str],
-        perp: typing.Optional[discord.Member],
-        reason: typing.Optional[str],
+        action: typing.Optional[str] = None,
+        perp: typing.Optional[discord.Member] = None,
+        reason: typing.Optional[str] = None,
     ):
         """Creates a trigger message.
 
@@ -607,7 +616,7 @@ class ReactCog(DogCog):
 
         return await ctx.send(f"The chance to greet users set to {chance_str}.")
 
-    async def cooldown(self, ctx: commands.Context, *, cooldown: typing.Optional[str]):
+    async def cooldown(self, ctx: commands.Context, *, cooldown: typing.Optional[str] = None):
         """Sets the cooldown used by the greeter.
 
         Args:
