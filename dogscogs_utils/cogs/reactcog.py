@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from enum import Flag, auto
 import random
+import string
 from types import SimpleNamespace
 import typing
 import discord
@@ -284,6 +285,7 @@ class ReactCog(DogCog):
         Args:
         \t\tentry (str): The new hello message to be used at random.
         """
+        msg = msg.strip(f"\"\'{string.whitespace}")
         responses: list[str] = await self._responses(ctx=ctx)()
         responses.append(msg)
         await self._responses(ctx=ctx).set(responses)
@@ -308,6 +310,8 @@ class ReactCog(DogCog):
         name = await self._name(ctx=ctx)()
         if len(responses) == 0:
             str += f"\n\nYou must have at least one response before {name} will fire."
+            
+        await self._responses(ctx=ctx).set(responses)
 
         return await ctx.send(f"Removed the following string to {name}:\n{str}")
 
