@@ -243,12 +243,28 @@ class ReactCog(DogCog, ABC):
         embed.description = "\n".join(message_list)
 
         return await ctx.send(embed=embed)
+    
+    def __tokenize_docstring(): 
+        def dec(obj):
+            obj.__doc__ = f"""Adds a new hello message for use in the server.  Use the following escaped strings for values:
+            -- ``{Token.MemberName}`` - The target member's name
+            -- ``{Token.MemberName}`` - The server name
+            -- ``{Token.MemberName}`` - The server member count
 
+            Args:
+            \t\tentry (str): The new hello message to be used at random.
+            """
+        return dec
+
+    @__tokenize_docstring()
     async def message_add(self, ctx: commands.Context, msg: str):
-        """Adds a response message to the trigger response list.
+        """Adds a new hello message for use in the server.  Use the following escaped strings for values:
+        -- ``{Token.MemberName}`` - The target member's name
+        -- ``{Token.MemberName}`` - The server name
+        -- ``{Token.MemberName}`` - The server member count
 
         Args:
-            msg (str): The message to respond with.
+        \t\tentry (str): The new hello message to be used at random.
         """
         messages: list[str] = await self._messages(ctx)()
         messages.append(msg)
