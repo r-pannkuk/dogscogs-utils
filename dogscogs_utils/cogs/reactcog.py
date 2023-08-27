@@ -751,13 +751,15 @@ class ReactCog(DogCog):
         trigger_config: TriggerConfig = await self._triggers(ctx=ctx)()
         trigger_list = trigger_config["list"]
 
-        if phrase.lower() in trigger_list:
+        phrase = phrase.lower().strip(f"\"\'{string.whitespace}")
+
+        if phrase in trigger_list:
             await ctx.send(
                 f"``{phrase}`` is already triggering for **{(await self._name(ctx=ctx)()).upper()}**."
             )
             return
 
-        trigger_list.append(phrase.lower())
+        trigger_list.append(phrase)
         trigger_config["list"] = trigger_list
         await self._triggers(ctx=ctx).set(trigger_config)
         await ctx.send(
@@ -783,15 +785,17 @@ class ReactCog(DogCog):
 
             removed_phrase = trigger_list.pop(phrase)
         else:
+            phrase = phrase.lower().strip(f"\"\'{string.whitespace}")
+
             if phrase.lower() not in trigger_list:
                 await ctx.send(
                     f"``{phrase}`` is not on the **{(await self._name(ctx=ctx)()).upper()}** triggers list."
                 )
                 return
 
-            removed_phrase = trigger_list.remove(phrase.lower())
+            removed_phrase = trigger_list.remove(phrase)
 
-        trigger_list.append(phrase.lower())
+        trigger_list.append(phrase)
         trigger_config["list"] = trigger_list
         await self._triggers(ctx=ctx).set(trigger_config)
 
