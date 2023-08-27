@@ -89,6 +89,12 @@ class ReactCog(DogCog):
         self.config.register_guild(**ReactCog.DefaultConfig)
         self._ban_cache = {}
 
+        bot.remove_listener(self.on_message, name="on_message")
+        bot.remove_listener(self.on_member_join, name="on_member_join")
+        bot.remove_listener(self.on_member_ban, name="on_member_ban")
+        bot.remove_listener(self.on_member_unban, name="on_member_unban")
+        bot.remove_listener(self.on_member_remove, name="on_member_remove")
+
         if react_type & ReactType.MESSAGE:
             bot.add_listener(self.on_message, name="on_message")
         
@@ -101,7 +107,7 @@ class ReactCog(DogCog):
 
         if react_type & ReactType.LEAVE or react_type & ReactType.KICK or react_type & ReactType.BAN:
             bot.add_listener(self.on_member_remove, name="on_member_remove")
-            
+
         self._react_type = react_type
 
         pass
