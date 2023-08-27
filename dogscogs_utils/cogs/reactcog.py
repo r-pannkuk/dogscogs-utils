@@ -255,7 +255,7 @@ class ReactCog(DogCog):
         if guild is None and ctx is None:
             raise commands.BadArgument("Must provide either `guild` or `ctx` to call.")
 
-        return self._group_guild(guild=guild, ctx=ctx).always_list
+        return self._group_guild(guild=guild, ctx=ctx).trigger
 
     async def toggle(self, ctx: commands.Context):
         """Toggles the functionality of this trigger on or off."""
