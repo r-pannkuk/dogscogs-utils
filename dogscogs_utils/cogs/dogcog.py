@@ -131,7 +131,7 @@ class DogCog(commands.Cog):
             is_enabled (typing.Optional[bool]): (Optional) Whether or not to enable this.
         """
         if is_enabled is None:
-            is_enabled = await self._enabled(ctx=ctx)
+            is_enabled = await self._enabled(ctx=ctx)()
 
         status_msg = ""
 
