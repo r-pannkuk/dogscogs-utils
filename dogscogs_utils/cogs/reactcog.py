@@ -65,6 +65,9 @@ class GuildConfig(_GuildConfig, typing.TypedDict):
     name: str
     trigger: TriggerConfig
 
+class ListenerConfig(typing.TypedDict):
+    enabled: bool
+    param_types: typing.Tuple
 
 class ReactCog(DogCog):
     DefaultConfig: GuildConfig = {
@@ -83,6 +86,14 @@ class ReactCog(DogCog):
     }
 
     TRIGGER_LENGTH_LIMIT = 6
+    Listeners : typing.Mapping[str, ListenerConfig] = {
+        "on_message": {"enabled": False, "param_types": (discord.Message)},
+        "on_member_join": {"enabled": False, "param_types": (discord.Member)},
+        "on_member_remove": {"enabled": False, "param_types": (discord.Member)},
+        "on_member_update": {"enabled": False, "param_types": (discord.Member, discord.Member)},
+        "on_member_ban": {"enabled": False, "param_types": (discord.Guild, discord.Member)},
+        "on_member_unban": {"enabled": False, "param_types": (discord.Guild, discord.Member)},
+    }
 
     def __init__(self, bot: Red, react_type: typing.Optional[ReactType] = None) -> None:
         super().__init__(bot)
@@ -90,6 +101,13 @@ class ReactCog(DogCog):
         self._ban_cache = {}
 
         self._react_type = react_type
+
+        for type in self.Listeners.keys():
+            if not self.Listeners[type]["enabled"]:
+                if hasattr(self, type):  
+                    self.bot.add_listener(getattr(self, type), name=type)
+                
+                    self.Listeners[type]["enabled"] = True
 
         pass
 
@@ -850,7 +868,6 @@ class ReactCog(DogCog):
     #                                                Listeners                                                #
     ###########################################################################################################
 
-    @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
         """Fires greeting messages if enabled.
 
@@ -867,7 +884,6 @@ class ReactCog(DogCog):
 
         pass
 
-    @commands.Cog.listener()
     async def on_member_remove(self, member: discord.Member):
         """Fires departure or kick / ban messages if enabled.
 
@@ -877,7 +893,7 @@ class ReactCog(DogCog):
         if (
             not self._react_type & ReactType.LEAVE
             or self._react_type & ReactType.KICK
-            or self.react_type & ReactType.BAN
+            or self._react_type & ReactType.BAN
         ):
             return
 
@@ -910,7 +926,6 @@ class ReactCog(DogCog):
             await self.create_if_enabled(member=member)
         pass
 
-    @commands.Cog.listener()
     async def on_member_ban(self, guild: discord.Guild, member: discord.Member):
         """
         This is only used to track that the user was banned and not kicked/removed
@@ -923,7 +938,6 @@ class ReactCog(DogCog):
         else:
             self._ban_cache[guild.id].append(member.id)
 
-    @commands.Cog.listener()
     async def on_member_unban(self, guild: discord.Guild, member: discord.Member):
         """
         This is only used to track that the user was banned and not kicked/removed
@@ -935,7 +949,6 @@ class ReactCog(DogCog):
             if member.id in self._ban_cache[guild.id]:
                 self._ban_cache[guild.id].remove(member.id)
 
-    @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
         """Listens for hello triggers and rolls a chance to trigger a response.
 
@@ -969,6 +982,8 @@ class ReactCog(DogCog):
         )()
         cooldown_config: CooldownConfig = await self._cooldown(guild=guild)()
 
+        is_firing = False
+
         if (
             any(
                 [t in content and content.index(t) > -1 for t in trigger_config["list"]]
@@ -977,16 +992,11 @@ class ReactCog(DogCog):
         ):
             if (
                 message.author.id in always_list
-                and (datetime.now() - timedelta(minutes=1)).timestamp()
-                > cooldown_config["last_timestamp"]
+                or random.random() < trigger_config["chance"]
             ):
-                is_firing = True
-            else:
-                is_firing = (
-                    random.random() < trigger_config["chance"]
-                    and datetime.now().timestamp() > cooldown_config["next"]
-                )
-
+                if datetime.now().timestamp() > cooldown_config["next"]:
+                    is_firing = True
+            
             if is_firing:
                 await self.create(channel=message.channel, member=message.author)
 
