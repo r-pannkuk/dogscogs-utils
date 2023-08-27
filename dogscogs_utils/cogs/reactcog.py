@@ -411,27 +411,31 @@ class ReactCog(DogCog):
         """Sets the image used with the trigger response.
 
         Args:
-            url (str, optional): The image to use in response messages. Defaults to None.
+            url (str, optional): The image to use in response messages. Defaults to None. Type "None" to reset the image.
         """
         embed: EmbedConfig = await self._embed(ctx=ctx)()
         prefix = "Currently"
 
         if url is not None:
-            prefix = "Now"
-            image_formats = ("image/png", "image/jpeg", "image/gif")
-            try:
-                headers = {
-                    "User-Agent": "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:23.0) Gecko/20100101 Firefox/23.0"
-                }
-                request = Request(url, headers=headers)
-                site = urlopen(request)
+            parsed_url = url.lower().strip(f"\"\'{string.whitespace}")
+            if parsed_url == "none" or parsed_url == "false":
+                url = None
+            else:
+                prefix = "Now"
+                image_formats = ("image/png", "image/jpeg", "image/gif")
+                try:
+                    headers = {
+                        "User-Agent": "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:23.0) Gecko/20100101 Firefox/23.0"
+                    }
+                    request = Request(url, headers=headers)
+                    site = urlopen(request)
 
-                meta = site.info()  # get header of the http request
+                    meta = site.info()  # get header of the http request
 
-                if meta["content-type"] not in image_formats:
-                    return await ctx.send("``ERROR: Given URL is not a valid image.``")
-            except (HTTPError, ValueError) as e:
-                return await ctx.send("``ERROR: Given parameter is not a valid url.``")
+                    if meta["content-type"] not in image_formats:
+                        return await ctx.send("``ERROR: Given URL is not a valid image.``")
+                except (HTTPError, ValueError) as e:
+                    return await ctx.send("``ERROR: Given parameter is not a valid url.``")
 
             embed["image_url"] = url
             await self._embed(ctx=ctx).set(embed)
@@ -532,7 +536,7 @@ class ReactCog(DogCog):
         if "footer" in embed_config and embed_config["footer"] != "":
             embed.set_footer(
                 text=replace_tokens(embed_config["footer"], member),
-                icon_url=member.avatar.url,
+                icon_url=member.display_avatar.url,
             )
 
         if "image_url" in embed_config and embed_config["image_url"] != "":
@@ -611,17 +615,7 @@ class ReactCog(DogCog):
         Args:
             channel (discord.TextChannel): The text channel to send it to.
         """
-        member = SimpleNamespace(
-            **{
-                "display_name": Token.MemberName,
-                "guild": SimpleNamespace(
-                    **{"name": Token.ServerName, "member_count": Token.MemberCount}
-                ),
-                "avatar_url": self.bot.user.display_avatar.url,
-                "mention": "$MEMBER_MENTION$",
-            }
-        )
-        return await self.create(channel=channel, member=member)
+        return await self.create(channel=channel, member=ctx.author)
 
     async def chance(
         self,
