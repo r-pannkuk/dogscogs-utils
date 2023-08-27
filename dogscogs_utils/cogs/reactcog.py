@@ -84,16 +84,25 @@ class ReactCog(DogCog):
 
     TRIGGER_LENGTH_LIMIT = 6
 
-    def __init__(self, bot: Red) -> None:
+    def __init__(self, bot: Red, react_type: typing.Optional[ReactType] = None) -> None:
         super().__init__(bot)
         self.config.register_guild(**ReactCog.DefaultConfig)
         self._ban_cache = {}
 
-        bot.add_listener(self.on_message, name="on_message")
-        bot.add_listener(self.on_member_ban, name="on_member_ban")
-        bot.add_listener(self.on_member_unban, name="on_member_unban")
-        bot.add_listener(self.on_member_join, name="on_member_join")
-        bot.add_listener(self.on_member_remove, name="on_member_remove")
+        if react_type & ReactType.MESSAGE:
+            bot.add_listener(self.on_message, name="on_message")
+        
+        if react_type & ReactType.JOIN:
+            bot.add_listener(self.on_member_join, name="on_member_join")
+
+        if react_type & ReactType.BAN:
+            bot.add_listener(self.on_member_ban, name="on_member_ban")
+            bot.add_listener(self.on_member_unban, name="on_member_unban")
+
+        if react_type & ReactType.LEAVE or react_type & ReactType.KICK or react_type & ReactType.BAN:
+            bot.add_listener(self.on_member_remove, name="on_member_remove")
+            
+        self._react_type = react_type
 
         pass
 
@@ -922,7 +931,7 @@ class ReactCog(DogCog):
             if any(message.content.startswith(p) for p in prefix):
                 return
 
-        content = message.content.lower().split()
+        content = message.content.lower()
         trigger_config: TriggerConfig = await self._triggers(guild=guild)()
         always_list: typing.List[typing.Union[str, int]] = await self._always_list(guild=guild)()
         cooldown_config: CooldownConfig = await self._cooldown(guild=guild)()
