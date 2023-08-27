@@ -668,19 +668,21 @@ class ReactCog(DogCog):
 
             cooldown_config["mins"] = cooldown
 
-            # Moving the cooldown to whatever the new amount is.
-            if cooldown_config["next"] > datetime.now().timestamp():
-                cooldown_config["next"] = (
+            next = (
                     datetime.fromtimestamp(cooldown_config["last_timestamp"])
                     + timedelta(minutes=d20.roll(cooldown).total)
                 ).timestamp()
 
+            # Moving the cooldown to whatever the new amount is.
+            if datetime.now().timestamp() > next:
+                cooldown_config["next"] = next
+
             await self._cooldown(ctx=ctx).set(cooldown_config)
 
-            await ctx.send(f"Set the cooldown to greet users to {cooldown} minutes.")
+            await ctx.send(f"Set the cooldown to greet users to {cooldown} minutes.  The next occurrence will be at <t:{int(cooldown_config['next'])}>.")
         else:
             await ctx.send(
-                f"The chance to greet users is currently {cooldown_config['mins']} minutes."
+                f"The chance to greet users is currently {cooldown_config['mins']} minutes.  The next occurrence will be at <t:{int(cooldown_config['next'])}>."
             )
         pass
 
