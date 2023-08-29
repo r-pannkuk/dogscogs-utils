@@ -3,7 +3,9 @@ import discord
 from redbot.core import commands
 from redbot.core.bot import Red
 from redbot.core.config import Config, Group as _Group, Value as _Value
+from abc import ABCMeta, ABC
 
+COG_IDENTIFIER = 260288776360820736
 
 class GuildConfig(typing.TypedDict):
     is_enabled: bool
@@ -40,11 +42,6 @@ class DogCog(commands.Cog):
 
     def __init__(self, bot: Red) -> None:
         self.bot = bot
-        self.config = Config.get_conf(
-            self,
-            identifier=260288776360820736,
-            force_registration=True,
-        )
 
     def _group_guild(
         self,
@@ -61,7 +58,7 @@ class DogCog(commands.Cog):
         Returns:
             Group: Group config for the guild.
         """
-        if guild is None and ctx is None:
+        if guild is None and (ctx is None or ctx.guild is None):
             raise commands.BadArgument("Must provide either `guild` or `ctx` to call.")
         
         return self.config.guild(guild or ctx.guild)
@@ -81,7 +78,7 @@ class DogCog(commands.Cog):
         Returns:
             Value[bool]: The enabled value of the config.
         """
-        if guild is None and ctx is None:
+        if guild is None and (ctx is None or ctx.guild is None):
             raise commands.BadArgument("Must provide either `guild` or `ctx` to call.")
         
         return self._group_guild(guild=guild, ctx=ctx).is_enabled

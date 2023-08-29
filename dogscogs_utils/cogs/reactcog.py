@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from enum import Flag, auto
+from enum import auto, IntFlag
 import random
 import string
 from types import SimpleNamespace
@@ -8,8 +8,9 @@ import discord
 from urllib.request import urlopen, Request
 from urllib.error import HTTPError
 import d20
+from abc import ABC, ABCMeta
 
-from redbot.core import commands
+from redbot.core import commands, Config
 from redbot.core.bot import Red
 
 from dogscogs_utils.adapters.converters import Percent
@@ -18,11 +19,12 @@ from .dogcog import (
     DogCog,
     Value,
     GuildConfig as _GuildConfig,
+    COG_IDENTIFIER
 )
 from ..adapters.parsers import Token, get_audit_log_reason, replace_tokens
 
 
-class ReactType(Flag):
+class ReactType(IntFlag):
     MESSAGE = auto()
     JOIN = auto()
     KICK = auto()
@@ -41,6 +43,13 @@ class EmbedConfig(typing.TypedDict):
     title: typing.Optional[str]
     footer: typing.Optional[str]
     image_url: typing.Optional[str]
+    color: typing.Optional[
+        typing.Tuple[
+            typing.Annotated[int, "[0,255]"],
+            typing.Annotated[int, "[0,255]"],
+            typing.Annotated[int, "[0,255]"],
+        ]
+    ]
 
 
 class TriggerConfig(typing.TypedDict):
@@ -52,13 +61,6 @@ class TriggerConfig(typing.TypedDict):
 class GuildConfig(_GuildConfig, typing.TypedDict):
     always_list: typing.Optional[typing.List[typing.Union[str, int]]]
     channel_ids: typing.Optional[typing.List[typing.Union[str, int]]]
-    color: typing.Optional[
-        typing.Tuple[
-            typing.Annotated[int, "[0,255]"],
-            typing.Annotated[int, "[0,255]"],
-            typing.Annotated[int, "[0,255]"],
-        ]
-    ]
     cooldown: CooldownConfig
     embed: typing.Optional[EmbedConfig]
     responses: typing.List[str]
@@ -69,20 +71,26 @@ class ListenerConfig(typing.TypedDict):
     enabled: bool
     param_types: typing.Tuple
 
+
 class ReactCog(DogCog):
     DefaultConfig: GuildConfig = {
         **DogCog.DefaultConfig,
         "always_list": [],
         "channel_ids": [],
-        "color": discord.Color.lighter_grey().to_rgb(),
         "cooldown": {
             "mins": "1d30",
             "next": 0,
         },
-        "embed": {"use_embed": True, "title": "", "footer": "", "image_url": ""},
+        "embed": {
+            "use_embed": False, 
+            "title": None, 
+            "footer": None, 
+            "image_url": None, 
+            "color": discord.Color.lighter_grey().to_rgb(),
+        },
         "responses": [],
         "name": "",
-        "trigger": {"type": ReactType.MESSAGE.value, "chance": 1.0, "list": []},
+        "trigger": {"type": ReactType.MESSAGE, "chance": 1.0, "list": []},
     }
 
     TRIGGER_LENGTH_LIMIT = 6
@@ -95,12 +103,9 @@ class ReactCog(DogCog):
         "on_member_unban": {"enabled": False, "param_types": (discord.Guild, discord.Member)},
     }
 
-    def __init__(self, bot: Red, react_type: typing.Optional[ReactType] = None) -> None:
+    def __init__(self, bot: Red) -> None:
         super().__init__(bot)
-        self.config.register_guild(**ReactCog.DefaultConfig)
         self._ban_cache = {}
-
-        self._react_type = react_type
 
         for type in self.Listeners.keys():
             if not self.Listeners[type]["enabled"]:
@@ -126,7 +131,7 @@ class ReactCog(DogCog):
         Returns:
             str: The name config value.
         """
-        if guild is None and ctx is None:
+        if guild is None and (ctx is None or ctx.guild is None):
             raise commands.BadArgument("Must provide either `guild` or `ctx` to call.")
 
         return self._group_guild(guild=guild, ctx=ctx).name
@@ -146,7 +151,7 @@ class ReactCog(DogCog):
         Returns:
             list[str]: The messages config value.
         """
-        if guild is None and ctx is None:
+        if guild is None and (ctx is None or ctx.guild is None):
             raise commands.BadArgument("Must provide either `guild` or `ctx` to call.")
 
         return self._group_guild(guild=guild, ctx=ctx).responses
@@ -166,7 +171,7 @@ class ReactCog(DogCog):
         Returns:
             list[id]: The list of user ids in the always list.
         """
-        if guild is None and ctx is None:
+        if guild is None and (ctx is None or ctx.guild is None):
             raise commands.BadArgument("Must provide either `guild` or `ctx` to call.")
 
         return self._group_guild(guild=guild, ctx=ctx).always_list
@@ -186,7 +191,7 @@ class ReactCog(DogCog):
         Returns:
             list[id]: The list of channel ids this cog should echo into.
         """
-        if guild is None and ctx is None:
+        if guild is None and (ctx is None or ctx.guild is None):
             raise commands.BadArgument("Must provide either `guild` or `ctx` to call.")
 
         return self._group_guild(guild=guild, ctx=ctx).channel_ids
@@ -206,7 +211,7 @@ class ReactCog(DogCog):
         Returns:
             Color: The color of embeds this cog uses.
         """
-        if guild is None and ctx is None:
+        if guild is None and (ctx is None or ctx.guild is None):
             raise commands.BadArgument("Must provide either `guild` or `ctx` to call.")
 
         return self._group_guild(guild=guild, ctx=ctx).color
@@ -226,7 +231,7 @@ class ReactCog(DogCog):
         Returns:
             CooldownConfig: The cooldown parameters of this cog.
         """
-        if guild is None and ctx is None:
+        if guild is None and (ctx is None or ctx.guild is None):
             raise commands.BadArgument("Must provide either `guild` or `ctx` to call.")
 
         return self._group_guild(guild=guild, ctx=ctx).cooldown
@@ -246,7 +251,7 @@ class ReactCog(DogCog):
         Returns:
             EmbedConfig: The embed parameters of this cog.
         """
-        if guild is None and ctx is None:
+        if guild is None and (ctx is None or ctx.guild is None):
             raise commands.BadArgument("Must provide either `guild` or `ctx` to call.")
 
         return self._group_guild(guild=guild, ctx=ctx).embed
@@ -266,7 +271,7 @@ class ReactCog(DogCog):
         Returns:
             TriggerConfig: The list of user ids in the always list.
         """
-        if guild is None and ctx is None:
+        if guild is None and (ctx is None or ctx.guild is None):
             raise commands.BadArgument("Must provide either `guild` or `ctx` to call.")
 
         return self._group_guild(guild=guild, ctx=ctx).trigger
@@ -336,7 +341,7 @@ class ReactCog(DogCog):
         """Lists all channels that triggers will respond to."""
         embed = discord.Embed()
         name = await self._name(ctx=ctx)()
-        embed.title = f"Channels for {name.lower()}:"
+        embed.title = f"Channels for {name}:"
 
         channels = []
         channel_ids = await self._channel_ids(ctx=ctx)()
@@ -527,19 +532,19 @@ class ReactCog(DogCog):
         embed_config: EmbedConfig = await self._embed(guild=guild)()
         embed = discord.Embed()
 
-        embed.title = replace_tokens(embed_config["title"], member)
+        embed.title = (replace_tokens(embed_config["title"], member, use_mentions=True) + " ") if embed_config["title"] is not None else ""
         embed.description = replace_tokens(
             random.choice(await self._responses(guild=guild)()), member
         )
         embed.colour = discord.Color.from_rgb(*(embed.colour or (0, 0, 0)))
 
-        if "footer" in embed_config and embed_config["footer"] != "":
+        if embed_config["footer"] != "" and embed_config["footer"] is not None:
             embed.set_footer(
                 text=replace_tokens(embed_config["footer"], member),
                 icon_url=member.display_avatar.url,
             )
 
-        if "image_url" in embed_config and embed_config["image_url"] != "":
+        if embed_config["image_url"] != "" and embed_config["image_url"] is not None:
             embed.set_thumbnail(url=embed_config["image_url"])
 
         if action:
@@ -569,13 +574,13 @@ class ReactCog(DogCog):
         """
         guild = channel.guild
         embed_config: EmbedConfig = await self._embed(guild=guild)()
-        title = replace_tokens(embed_config["title"], member, use_mentions=True)
+        title = (replace_tokens(embed_config["title"], member, use_mentions=True) + " ") if embed_config["title"] is not None else ""
         choice = replace_tokens(
             random.choice(await self._responses(guild=guild)()),
             member,
             use_mentions=True,
         )
-        return await channel.send(f"{title} {choice}")
+        return await channel.send(f"{title}{choice}")
 
     async def create(
         self,
@@ -596,8 +601,8 @@ class ReactCog(DogCog):
             reason (str): (Optional) The reason for the trigger.
         """
         guild = channel.guild
-        messages: list[str] = await self._responses(guild=guild)()
-        if len(messages) < 1:
+        responses: list[str] = await self._responses(guild=guild)()
+        if len(responses) < 1:
             return await channel.send("No response messages found.")
 
         embed_config: EmbedConfig = await self._embed(guild=guild)()
@@ -832,7 +837,7 @@ class ReactCog(DogCog):
         )
         pass
 
-    async def create_if_enabled(
+    async def create_all_if_enabled(
         self,
         *,
         member: discord.Member,
@@ -870,13 +875,15 @@ class ReactCog(DogCog):
         __Args__:
             member (discord.Member): Affected member.
         """
-        if not self._react_type & ReactType.JOIN:
+        guild = member.guild
+        trigger_config : TriggerConfig = await self._triggers(guild=guild)()
+        if not trigger_config["type"] & ReactType.JOIN:
             return
 
         if member.bot:
             return
 
-        await self.create_if_enabled(member=member)
+        await self.create_all_if_enabled(member=member)
 
         pass
 
@@ -886,10 +893,12 @@ class ReactCog(DogCog):
         __Args__:
             member (discord.Member): Affected member.
         """
-        if (
-            not self._react_type & ReactType.LEAVE
-            or self._react_type & ReactType.KICK
-            or self._react_type & ReactType.BAN
+        guild = member.guild
+        trigger_config : TriggerConfig = await self._triggers(guild=guild)()
+        if not (
+            trigger_config["type"] & ReactType.BAN or 
+            trigger_config["type"] & ReactType.KICK or
+            trigger_config["type"] & ReactType.LEAVE  
         ):
             return
 
@@ -915,18 +924,24 @@ class ReactCog(DogCog):
                 action = "kicked"
                 pass
 
-            await self.create_if_enabled(
+            await self.create_all_if_enabled(
                 member=member, action=action, perp=perp, reason=reason
             )
         else:
-            await self.create_if_enabled(member=member)
+            await self.create_all_if_enabled(member=member)
         pass
 
     async def on_member_ban(self, guild: discord.Guild, member: discord.Member):
         """
         This is only used to track that the user was banned and not kicked/removed
         """
-        if not self._react_type & ReactType.BAN:
+        guild = member.guild
+        trigger_config : TriggerConfig = await self._triggers(guild=guild)()
+        if not (
+            trigger_config["type"] & ReactType.BAN or 
+            trigger_config["type"] & ReactType.KICK or
+            trigger_config["type"] & ReactType.LEAVE  
+        ):
             return
 
         if guild.id not in self._ban_cache:
@@ -934,11 +949,12 @@ class ReactCog(DogCog):
         else:
             self._ban_cache[guild.id].append(member.id)
 
-    async def on_member_unban(self, guild: discord.Guild, member: discord.Member):
+    async def on_member_unban(self, guild: discord.Guild, member: typing.Union[discord.Member, discord.User]):
         """
         This is only used to track that the user was banned and not kicked/removed
         """
-        if not self._react_type & ReactType.BAN:
+        trigger_config : TriggerConfig = await self._triggers(guild=guild)()
+        if not trigger_config["type"] & ReactType.BAN:
             return
 
         if guild.id in self._ban_cache:
@@ -951,7 +967,12 @@ class ReactCog(DogCog):
         Args:
             message (discord.Message): The discord message listened to.
         """
-        if not self._react_type & ReactType.MESSAGE:
+        guild = message.guild
+        if guild is None:
+            return
+        
+        trigger_config : TriggerConfig = await self._triggers(guild=guild)()
+        if not trigger_config["type"] & ReactType.MESSAGE:
             return
 
         guild = message.guild
@@ -970,6 +991,11 @@ class ReactCog(DogCog):
         else:
             if any(message.content.startswith(p) for p in prefix):
                 return
+            
+        channel_ids : typing.List[str, int] = await self._channel_ids(guild=guild)()
+
+        if len(channel_ids) > 0 and message.channel.id not in channel_ids:
+            return
 
         content = message.content.lower()
         trigger_config: TriggerConfig = await self._triggers(guild=guild)()
@@ -990,7 +1016,7 @@ class ReactCog(DogCog):
                 message.author.id in always_list
                 or random.random() < trigger_config["chance"]
             ):
-                if datetime.now().timestamp() > cooldown_config["next"]:
+                if not cooldown_config["next"] or datetime.now().timestamp() > cooldown_config["next"]:
                     is_firing = True
             
             if is_firing:
