@@ -71,6 +71,7 @@ class ListenerConfig(typing.TypedDict):
     enabled: bool
     param_types: typing.Tuple
 
+ListenerGroupConfig = typing.Mapping[type, typing.Mapping[str, ListenerConfig]]
 
 class ReactCog(DogCog):
     DefaultConfig: GuildConfig = {
@@ -94,25 +95,30 @@ class ReactCog(DogCog):
     }
 
     TRIGGER_LENGTH_LIMIT = 6
-    Listeners : typing.Mapping[str, ListenerConfig] = {
-        "on_message": {"enabled": False, "param_types": (discord.Message)},
-        "on_member_join": {"enabled": False, "param_types": (discord.Member)},
-        "on_member_remove": {"enabled": False, "param_types": (discord.Member)},
-        "on_member_update": {"enabled": False, "param_types": (discord.Member, discord.Member)},
-        "on_member_ban": {"enabled": False, "param_types": (discord.Guild, discord.Member)},
-        "on_member_unban": {"enabled": False, "param_types": (discord.Guild, discord.Member)},
-    }
+
+    Listeners : ListenerGroupConfig = {}
 
     def __init__(self, bot: Red) -> None:
         super().__init__(bot)
         self._ban_cache = {}
 
-        for type in self.Listeners.keys():
-            if not self.Listeners[type]["enabled"]:
-                if hasattr(self, type):  
-                    self.bot.add_listener(getattr(self, type), name=type)
+        if self.__class__.__name__ not in self.Listeners:
+            self.Listeners[self.__class__.__name__] = {
+                "on_message": {"enabled": False, "param_types": (discord.Message)},
+                "on_member_join": {"enabled": False, "param_types": (discord.Member)},
+                "on_member_remove": {"enabled": False, "param_types": (discord.Member)},
+                "on_member_update": {"enabled": False, "param_types": (discord.Member, discord.Member)},
+                "on_member_ban": {"enabled": False, "param_types": (discord.Guild, discord.Member)},
+                "on_member_unban": {"enabled": False, "param_types": (discord.Guild, discord.Member)},
+            }
+
+        for type in self.Listeners[self.__class__.__name__].keys():
+            if not self.Listeners[self.__class__.__name__][type]["enabled"]:
+                if hasattr(self, type): 
+                    func = getattr(self, type)
+                    self.bot.add_listener(func, name=type)
                 
-                    self.Listeners[type]["enabled"] = True
+                    self.Listeners[self.__class__.__name__][type]["enabled"] = True
 
         pass
 
@@ -367,7 +373,8 @@ class ReactCog(DogCog):
             channel (discord.TextChannel): The channel to add for triggering in.
         """
         channel_ids: list[str] = await self._channel_ids(ctx=ctx)()
-        await self._channel_ids(ctx=ctx).set(list(set(channel_ids.append(channel.id))))
+        channel_ids.append(channel.id)
+        await self._channel_ids(ctx=ctx).set(list(set(channel_ids)))
         await ctx.send(
             f"Added {channel.mention} to the {await self._name(ctx=ctx)()} channel list."
         )
@@ -380,7 +387,8 @@ class ReactCog(DogCog):
             channel (discord.TextChannel): The channel to respond with triggers in.
         """
         channel_ids: list[str] = await self._channel_ids(ctx=ctx)()
-        channel_ids.discard(channel.id)
+        channel_ids.remove(channel.id)
+        await self._channel_ids(ctx=ctx).set(list(set(channel_ids)))
         await ctx.send(
             f"Removed {channel.mention} from the {await self._name(ctx=ctx)()} channel list."
         )
@@ -532,7 +540,7 @@ class ReactCog(DogCog):
         embed_config: EmbedConfig = await self._embed(guild=guild)()
         embed = discord.Embed()
 
-        embed.title = (replace_tokens(embed_config["title"], member, use_mentions=True) + " ") if embed_config["title"] is not None else ""
+        embed.title = (replace_tokens(embed_config["title"], member, use_mentions=False) + " ") if embed_config["title"] is not None else ""
         embed.description = replace_tokens(
             random.choice(await self._responses(guild=guild)()), member
         )
@@ -858,11 +866,11 @@ class ReactCog(DogCog):
 
             if channel is not None:
                 await self.create(
-                    channel,
-                    member,
-                    action,
-                    perp,
-                    reason,
+                    channel=channel,
+                    member=member,
+                    action=action,
+                    perp=perp,
+                    reason=reason,
                 )
 
     ###########################################################################################################
@@ -916,19 +924,21 @@ class ReactCog(DogCog):
                 guild, member, discord.AuditLogAction.kick
             )
 
-        if perp is not None:
-            if guild.id in self._ban_cache and member.id in self._ban_cache[guild.id]:
-                action = "banned"
-                pass
-            else:
-                action = "kicked"
-                pass
+        if perp is not None and (
+            trigger_config["type"] & ReactType.BAN or
+            trigger_config["type"] & ReactType.KICK
+        ):
+            if guild.id in self._ban_cache and member.id in self._ban_cache[guild.id] and trigger_config["type"] & ReactType.BAN:
+                await self.create_all_if_enabled(
+                    member=member, action="been banned", perp=perp, reason=reason
+                )
+            elif trigger_config["type"] & ReactType.KICK:
+                                await self.create_all_if_enabled(
+                    member=member, action="been kicked", perp=perp, reason=reason
+                )
 
-            await self.create_all_if_enabled(
-                member=member, action=action, perp=perp, reason=reason
-            )
-        else:
-            await self.create_all_if_enabled(member=member)
+        elif trigger_config["type"] & ReactType.LEAVE:
+            await self.create_all_if_enabled(member=member, action="left")
         pass
 
     async def on_member_ban(self, guild: discord.Guild, member: discord.Member):
