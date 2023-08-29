@@ -924,17 +924,14 @@ class ReactCog(DogCog):
                 guild, member, discord.AuditLogAction.kick
             )
 
-        if perp is not None and (
-            trigger_config["type"] & ReactType.BAN or
-            trigger_config["type"] & ReactType.KICK
-        ):
+        if perp is not None:
             if guild.id in self._ban_cache and member.id in self._ban_cache[guild.id] and trigger_config["type"] & ReactType.BAN:
                 await self.create_all_if_enabled(
-                    member=member, action="been banned", perp=perp, reason=reason
+                    member=member, action="was banned", perp=perp, reason=reason
                 )
             elif trigger_config["type"] & ReactType.KICK:
                                 await self.create_all_if_enabled(
-                    member=member, action="been kicked", perp=perp, reason=reason
+                    member=member, action="was kicked", perp=perp, reason=reason
                 )
 
         elif trigger_config["type"] & ReactType.LEAVE:
