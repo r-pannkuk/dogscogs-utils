@@ -28,7 +28,7 @@ class BirthdayConverter(DogCogConverter):
     """Returns a datetime object ignoring the birthday for a birthday string.
     """
     @staticmethod
-    async def convert(_ctx: commands.Context, argument: str) -> datetime.datetime: # type:ignore[override]
+    async def parse(_ctx: commands.Context, argument: str) -> datetime.datetime:
         for fmt in date_formats():
             try:
                 return datetime.datetime.strptime(argument, fmt).replace(year=1980).astimezone(tz=TIMEZONE)
