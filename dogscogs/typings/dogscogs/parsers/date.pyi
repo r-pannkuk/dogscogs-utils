@@ -1,10 +1,6 @@
-from ..constants import TIMEZONE as TIMEZONE
-from _typeshed import Incomplete
-from collections.abc import Generator
 from datetime import datetime as datetime
+from itertools import permutations as permutations
 
-def date_formats() -> Generator[Incomplete, None, None]: ...
-def to_birthdate(*args, **kwargs): ...
 def duration_string(hours: int, minutes: int, seconds: int) -> str:
     """Converts hours, minutes, and seconds into a string duration.
 

@@ -4,37 +4,6 @@ import re
 from time import strptime
 from redbot.core.commands import commands
 
-from ..constants import TIMEZONE
-
-import pytz
-
-
-def date_formats():
-    years = ("%Y", "%y")
-    months = ("%b", "%B", "%m")
-    days = ("%d",)
-
-    for month in months:
-        for day in days:
-            for args in ((month, day), (day, month)):
-                yield " ".join(args)
-                yield "/".join(args)
-                date_spaced = " ".join(args)
-                date_slash = "/".join(args)
-                for year in years:
-                    for combo in permutations([year, date_spaced]):
-                        yield " ".join(combo).strip()
-                    for combo in permutations([year, date_slash]):
-                        yield "/".join(combo).strip()
-
-
-def to_birthdate(*args, **kwargs):
-    for fmt in date_formats():
-        try:
-            return strptime(args[0], fmt).replace(year=1980).astimezone(tz=TIMEZONE)
-        except ValueError:
-            pass
-    raise ValueError(f"{args[0]} is not a recognized date.")
 
 def duration_string(hours: int, minutes: int, seconds: int) -> str:
     """Converts hours, minutes, and seconds into a string duration.

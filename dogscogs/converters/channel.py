@@ -5,7 +5,7 @@ from ..constants.discord.channel import TEXT_TYPES
 
 from ..core.converter import DogCogConverter
 
-class ListChannelsText(DogCogConverter):
+class TextChannelList(DogCogConverter):
     @staticmethod
     async def parse(ctx: commands.GuildContext, argument: str) -> typing.List[TEXT_TYPES]: # type:ignore[override]
         channels = ctx.guild.channels
