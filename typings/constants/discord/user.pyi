@@ -1,0 +1,1 @@
+MAX_NAME_LENGTH: int

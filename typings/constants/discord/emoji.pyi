@@ -1,0 +1,2 @@
+MIN_NAME_LENGTH: int
+MAX_NAME_LENGTH: int

@@ -1,0 +1,6 @@
+TRIGGER: str
+IP_ADDRESS: str
+PORT: str
+IMAGE: str
+EMOJI_NAME: str
+EMOJI_URL: str
