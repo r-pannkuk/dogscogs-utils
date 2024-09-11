@@ -41,7 +41,7 @@ class PercentagePrompt(discord.ui.Modal):
             return False
 
         try:
-            value = await Percent.parse(self.item.value)
+            value = await Percent.parse(None, self.item.value) # type: ignore[arg-type]
         except:
             raise ValueError("Please enter a valid number.")
 

@@ -3,9 +3,9 @@ import typing
 import discord
 from redbot.core import Config
 
-from converters.diceroll import DiceRoll
-from converters.percent import Percent
-from constants import regex
+from ..converters.diceroll import DiceRoll
+from ..converters.percent import Percent
+from ..constants import regex
 
 async def validate_true(str: str, interaction: discord.Interaction):
     return True
@@ -16,18 +16,18 @@ async def validate_number_or_diceroll(input: str, interaction: discord.Interacti
         return True
     except:
         try:
-            await DiceRoll.parse(input)
+            await DiceRoll.parse(None, input) # type: ignore[arg-type]
             return True
         except:
             return False
 
 async def validate_percent_or_diceroll(input: str, interaction: discord.Interaction):
     try:
-        await Percent.parse(input)
+        await Percent.parse(None, input) # type: ignore[arg-type]
         return True
     except:
         try:
-            DiceRoll.parse(input)
+            await DiceRoll.parse(None, input) # type: ignore[arg-type]
             return True
         except:
             return False

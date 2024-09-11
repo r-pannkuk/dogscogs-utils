@@ -1,13 +1,13 @@
 import typing
-from redbot.core.commands import commands, GuildContext
+from redbot.core import commands
 
-from constants.discord import Channel
+from ..constants.discord.channel import TEXT_TYPES
 
-from core.converter import DogCogConverter
+from ..core.converter import DogCogConverter
 
 class ListChannelsText(DogCogConverter):
     @staticmethod
-    async def convert(self, ctx: GuildContext, argument: str) -> typing.List[Channel.TEXT_TYPES]:
+    async def parse(ctx: commands.GuildContext, argument: str) -> typing.List[TEXT_TYPES]: # type:ignore[override]
         channels = ctx.guild.channels
         args = argument.split()
 
@@ -26,9 +26,9 @@ class ListChannelsText(DogCogConverter):
             raise commands.BadArgument(f"No channels were found for: {','.join(args)}")
 
         bad_channels = [
-            channel
+            channel.mention
             for channel in channel_list
-            if channel.type not in Channel.TEXT_TYPES
+            if not isinstance(channel, TEXT_TYPES) 
         ]
 
         if len(bad_channels) > 0:
@@ -36,4 +36,4 @@ class ListChannelsText(DogCogConverter):
                 f"Can't read messages for {','.join(bad_channels)}"
             )
 
-        return channel_list
+        return channel_list # type: ignore[return-value]

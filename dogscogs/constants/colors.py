@@ -3,6 +3,7 @@ from fractions import Fraction
 import itertools
 import random
 from typing import Iterable, Tuple
+import typing
 
 import discord
 
@@ -249,5 +250,5 @@ def hex_to_rgb(h: str) -> Tuple[int, int, int]:
     Converts a hex value to 3 rgb values.
     """
     h = h.replace("#", "").replace("0x", "").replace("0X", "")
-    return tuple(int(h[i : i + 2], 16) for i in (0, 2, 4))
+    return tuple(int(h[i : i + 2], 16) for i in (0, 2, 4)) # type: ignore[return-value]
 
