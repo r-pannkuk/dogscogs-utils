@@ -16,7 +16,4 @@ profile = "black"
 line_length = 99
 
 [tool.mypy]
-mypy_path = "$MYPY_CONFIG_FILE_DIR/typings"
-
-[tool.setuptools]
-packages = ["dogscogs"]
+mypy_path = "$MYPY_CONFIG_FILE_DIR/dogscogs/typings"
