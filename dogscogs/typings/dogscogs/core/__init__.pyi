@@ -1,0 +1,3 @@
+import discord
+
+async def get_audit_log_reason(guild: discord.Guild, target: discord.abc.GuildChannel | discord.Member | discord.Role, action: discord.AuditLogAction) -> tuple[discord.abc.User | None, str | None]: ...
