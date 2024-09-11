@@ -3,11 +3,11 @@ dogscogs-utils
 ==============
 
 
-.. image:: https://img.shields.io/pypi/v/dogscogs_utils.svg
-        :target: https://pypi.python.org/pypi/dogscogs_utils
+.. image:: https://img.shields.io/pypi/v/dogscogs-utils.svg
+        :target: https://pypi.python.org/pypi/dogscogs-utils
 
-.. image:: https://img.shields.io/travis/ /dogscogs_utils.svg
-        :target: https://travis-ci.com/ /dogscogs_utils
+.. image:: https://img.shields.io/travis/ /dogscogs-utils.svg
+        :target: https://travis-ci.com/ /dogscogs-utils
 
 .. image:: https://readthedocs.org/projects/dogscogs-utils/badge/?version=latest
         :target: https://dogscogs-utils.readthedocs.io/en/latest/?version=latest
