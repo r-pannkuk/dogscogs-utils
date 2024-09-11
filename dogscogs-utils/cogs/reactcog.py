@@ -24,14 +24,6 @@ from .dogcog import (
 from ..adapters.parsers import Token, get_audit_log_reason, replace_tokens
 
 
-class ReactType(IntFlag):
-    MESSAGE = auto()
-    JOIN = auto()
-    KICK = auto()
-    BAN = auto()
-    LEAVE = auto()
-
-
 class CooldownConfig(typing.TypedDict):
     mins: typing.Union[str, float]
     next: float
