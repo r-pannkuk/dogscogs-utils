@@ -1,9 +1,9 @@
 import typing
 import discord
 
-from ...converters.percent import Percent
+from ..converters.percent import Percent
 
-class PercentagePrompt(discord.ui.Modal):
+class NumberPromptModal(discord.ui.Modal):
     def __init__(
         self,
         *,
@@ -32,9 +32,9 @@ class PercentagePrompt(discord.ui.Modal):
 
         self.add_item(self.item)
 
-        self.min = min
-        self.max = max
-        self.author = author
+        self.min: int = min
+        self.max: int = max
+        self.author: typing.Union[discord.Member, discord.User] = author
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if interaction.user != self.author:

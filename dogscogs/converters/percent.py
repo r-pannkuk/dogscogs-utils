@@ -10,4 +10,4 @@ class Percent(DogCogConverter):
                 return float(input[:-1]) / 100
             return float(input)
         except:
-            raise commands.BadArgument("Chance must be between (0, 1]")
+            raise commands.BadArgument("Invalid percent value.")

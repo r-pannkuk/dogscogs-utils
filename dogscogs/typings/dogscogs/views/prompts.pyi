@@ -1,8 +1,8 @@
 import discord
-from ...converters.percent import Percent as Percent
+from ..converters.percent import Percent as Percent
 from _typeshed import Incomplete
 
-class PercentagePrompt(discord.ui.Modal):
+class NumberPromptModal(discord.ui.Modal):
     item: Incomplete
     min: Incomplete
     max: Incomplete
