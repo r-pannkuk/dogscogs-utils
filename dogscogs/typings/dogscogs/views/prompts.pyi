@@ -2,10 +2,14 @@ import discord
 from ..converters.percent import Percent as Percent
 from _typeshed import Incomplete
 
-class NumberPromptModal(discord.ui.Modal):
-    item: Incomplete
+class NumberPromptTextInput(discord.ui.TextInput):
     min: Incomplete
     max: Incomplete
+    def __init__(self, *args, min: int | None = None, max: int | None = None, **kwargs) -> None: ...
+    async def interaction_check(self, interaction: discord.Interaction) -> bool: ...
+
+class NumberPromptModal(discord.ui.Modal):
+    item: Incomplete
     author: Incomplete
     def __init__(self, *, author: discord.Member | discord.User, title: str, label: str, placeholder: str, custom_id: str, min: int, max: int, row: int = 0) -> None: ...
     async def interaction_check(self, interaction: discord.Interaction) -> bool: ...
