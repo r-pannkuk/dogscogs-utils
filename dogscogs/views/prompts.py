@@ -19,13 +19,16 @@ class NumberPromptTextInput(discord.ui.TextInput):
         try:
             value = await Percent.parse(None, self.value) # type: ignore[arg-type]
         except:
-            raise ValueError("Please enter a valid number.")
+            await interaction.response.send_message("❌ ERROR: Please enter a valid number.", ephemeral=True, delete_after=15)
+            return False
 
         if self.min is not None and value < self.min:
-            raise ValueError(f"Please enter a number greater than {self.min}.")
+            await interaction.response.send_message(f"❌ ERROR: Please enter a number greater than {self.min}.", ephemeral=True, delete_after=15)
+            return False
 
         if self.max is not None and value > self.max:
-            raise ValueError(f"Please enter a number less than {self.max}.")
+            await interaction.response.send_message(f"❌ ERROR: Please enter a number less than {self.max}.", ephemeral=True, delete_after=15)
+            return False
 
         return True
         
@@ -66,23 +69,12 @@ class NumberPromptModal(discord.ui.Modal):
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if interaction.user != self.author:
             return False
-
-        # try:
-        #     value = await Percent.parse(None, self.item.value) # type: ignore[arg-type]
-        # except:
-        #     raise ValueError("Please enter a valid number.")
-
-        # if value < self.min or value > self.max:
-        #     raise ValueError(
-        #         f"Please enter a number between {self.min} and {self.max}."
-        #     )
+        
+        for item in self.children:
+            if not await item.interaction_check(interaction):
+                return False
 
         return True
-
-    async def on_error(self, interaction: discord.Interaction, exception: Exception) -> None:  # type: ignore
-        await interaction.response.send_message(
-            str(exception), ephemeral=True, delete_after=20
-        )
-
-    async def on_submit(self, interaction: discord.Interaction):
-        await interaction.response.defer()
+    
+    async def on_error(self, interaction: discord.Interaction, error: Exception) -> None:
+        await interaction.response.send_message(f"❌ An error occured: {error}", ephemeral=True)

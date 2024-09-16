@@ -5,6 +5,7 @@ async def async_true(i: discord.Interaction) -> bool:
     return True
 
 class ConfirmationView(discord.ui.View):
+    """Whether the user pressed Yes or No."""
     value : bool = False
 
     def __init__(

@@ -5,6 +5,7 @@ from _typeshed import Incomplete
 async def async_true(i: discord.Interaction) -> bool: ...
 
 class ConfirmationView(discord.ui.View):
+    """Whether the user pressed Yes or No."""
     value: bool
     author: Incomplete
     callback: Incomplete
