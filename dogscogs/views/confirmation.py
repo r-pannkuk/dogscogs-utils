@@ -27,9 +27,11 @@ class ConfirmationView(discord.ui.View):
     @discord.ui.button(label="Yes", style=discord.ButtonStyle.green)
     async def yes(self, interaction: discord.Interaction, button: discord.ui.Button):
         self.value = await self.callback(interaction)
+        await interaction.response.defer()
         self.stop()
 
     @discord.ui.button(label="No", style=discord.ButtonStyle.red)
     async def no(self, interaction: discord.Interaction, button: discord.ui.Button):
         self.value = False
+        await interaction.response.defer()
         self.stop()

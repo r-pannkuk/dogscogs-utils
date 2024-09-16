@@ -31,6 +31,11 @@ class NumberPromptTextInput(discord.ui.TextInput):
             return False
 
         return True
+    
+    async def on_submit(self, interaction: discord.Interaction):
+        await interaction.response.defer()
+
+    
         
 
 class NumberPromptModal(discord.ui.Modal):
@@ -76,5 +81,9 @@ class NumberPromptModal(discord.ui.Modal):
 
         return True
     
-    async def on_error(self, interaction: discord.Interaction, error: Exception) -> None:
+    async def on_error(self, interaction: discord.Interaction, error: Exception) -> None: # type: ignore[override]
         await interaction.response.send_message(f"❌ An error occured: {error}", ephemeral=True)
+
+    async def on_submit(self, interaction: discord.Interaction) -> None:
+        await interaction.response.defer()
+        self.stop()
