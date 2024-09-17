@@ -25,10 +25,11 @@ class PaginatedEmbed(discord.ui.View):
 
     def __init__(
             self,
-            *,
+            *args,
             message : typing.Optional[discord.Message] = None,
             interaction : typing.Optional[discord.Interaction] = None,
-            get_page: typing.Callable[[int], typing.Awaitable[typing.Tuple[discord.Embed, int]]]
+            get_page: typing.Callable[[int], typing.Awaitable[typing.Tuple[discord.Embed, int]]],
+            **kwargs
     ):
         self.original_message : typing.Optional[discord.Message] = message
         self.interaction : typing.Optional[discord.Interaction] = interaction
@@ -44,7 +45,7 @@ class PaginatedEmbed(discord.ui.View):
         self.get_page : typing.Callable[[int], typing.Awaitable[typing.Tuple[discord.Embed, int]]] = get_page
         self.total_pages : int = 0
         self.index = 0
-        super().__init__(timeout=10*60)
+        super().__init__(*args, **kwargs)
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if interaction.user == self.author:
