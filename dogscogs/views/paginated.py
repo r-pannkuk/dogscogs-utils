@@ -1,6 +1,25 @@
 import typing
 import discord
 
+class OnCallbackSelect(discord.ui.Select):
+    on_callback: typing.Callable[[typing.List[str]], typing.Awaitable[None]]
+
+    def __init__(
+        self,
+        *args,
+        callback: typing.Callable[[typing.List[str]], typing.Awaitable[None]],
+        **kwargs,
+    ):
+        self.on_callback = callback
+        super().__init__(*args, **kwargs)
+
+    async def callback(
+        self,
+        interaction: discord.Interaction,
+    ) -> None:
+        await self.on_callback(self.values)
+        await interaction.response.defer()
+
 class PaginatedEmbed(discord.ui.View):
     message : discord.Message
 

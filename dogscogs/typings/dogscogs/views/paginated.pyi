@@ -2,6 +2,11 @@ import discord
 import typing
 from _typeshed import Incomplete
 
+class OnCallbackSelect(discord.ui.Select):
+    on_callback: typing.Callable[[list[str]], typing.Awaitable[None]]
+    def __init__(self, *args, callback: typing.Callable[[list[str]], typing.Awaitable[None]], **kwargs) -> None: ...
+    async def callback(self, interaction: discord.Interaction) -> None: ...
+
 class PaginatedEmbed(discord.ui.View):
     message: discord.Message
     original_message: Incomplete
