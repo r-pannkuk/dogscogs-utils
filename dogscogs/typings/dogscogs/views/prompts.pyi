@@ -2,6 +2,12 @@ import discord
 from ..converters.percent import Percent as Percent
 from _typeshed import Incomplete
 
+class ValidImageURLTextInput(discord.ui.TextInput):
+    valid_extensions: Incomplete
+    def __init__(self, *args, valid_extensions: list[str] = ['.png', '.jpg', '.jpeg', '.gif'], **kwargs) -> None: ...
+    async def interaction_check(self, interaction: discord.Interaction) -> bool: ...
+    async def on_submit(self, interaction: discord.Interaction): ...
+
 class NumberPromptTextInput(discord.ui.TextInput):
     min: Incomplete
     max: Incomplete

@@ -1,7 +1,42 @@
 import typing
 import discord
+import requests
 
 from ..converters.percent import Percent
+
+class ValidImageURLTextInput(discord.ui.TextInput):
+    def __init__(
+        self,
+        *args,
+        valid_extensions: typing.List[str] = [".png", ".jpg", ".jpeg", ".gif"],
+        **kwargs
+    ):
+        super().__init__(*args, **kwargs)
+        self.valid_extensions = valid_extensions
+
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        extension = self.value.split(".")[-1]
+
+        if extension not in self.valid_extensions:
+            await interaction.response.send_message(f"❌ ERROR: Only the following image extensions are supported: {', '.join(self.valid_extensions)}.", ephemeral=True, delete_after=15)
+            return False
+
+        try: 
+            image_formats = (
+                f"image/{ext[1:]}" for ext in self.valid_extensions
+            )
+            r = requests.head(self.value)
+            if r.headers["content-type"] not in image_formats:
+                await interaction.response.send_message("❌ ERROR: Please enter a valid image URL.", ephemeral=True, delete_after=15)
+                return False
+            return True
+        except:
+            await interaction.response.send_message("❌ ERROR: Please enter a valid image URL.", ephemeral=True, delete_after=15)
+            return False
+        
+    async def on_submit(self, interaction: discord.Interaction):
+        await interaction.response.defer()
+
 
 class NumberPromptTextInput(discord.ui.TextInput):
     def __init__(
