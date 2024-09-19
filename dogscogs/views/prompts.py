@@ -84,6 +84,7 @@ class NumberPromptModal(discord.ui.Modal):
         custom_id: str,
         min: int,
         max: int,
+        default: typing.Optional[int] = None,
         row: int = 0,
     ):
         super().__init__(
@@ -98,6 +99,7 @@ class NumberPromptModal(discord.ui.Modal):
             style=discord.TextStyle.short,
             custom_id=custom_id,
             row=row,
+            default=default,
             min=min,
             max=max,
         )
