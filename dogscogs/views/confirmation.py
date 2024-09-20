@@ -4,17 +4,44 @@ import discord
 async def async_true(i: discord.Interaction) -> bool:
     return True
 
+class ConfirmationPrompt(discord.ui.Modal):
+    value: bool = False
+
+    def __init__(
+        self,
+        *args,
+        author: discord.Member,
+        callback: typing.Callable[[discord.Interaction], typing.Awaitable[bool]] = async_true,
+        **kwargs,
+    ):
+        super().__init__(*args, **kwargs)
+        self.author = author
+        self.callback = callback
+
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        if interaction.user != self.author:
+            await interaction.response.send_message("You are not allowed to interact with this message.", ephemeral=True, delete_after=10)
+            return False
+        return True
+    
+    async def on_submit(self, interaction: discord.Interaction):
+        await interaction.response.defer()
+        self.value = await self.callback(interaction)
+        self.stop()
+        
+
 class ConfirmationView(discord.ui.View):
     """Whether the user pressed Yes or No."""
     value : bool = False
 
     def __init__(
             self, 
-            *, 
+            *args, 
             author: discord.Member,
             callback: typing.Callable[[discord.Interaction], typing.Awaitable[bool]] = async_true,
+            **kwargs
         ):
-        super().__init__()
+        super().__init__(*args, **kwargs)
         self.author = author
         self.callback = callback
 

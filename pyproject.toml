@@ -1,6 +1,6 @@
 [project]
 name = "dogscogs-utils"
-version = "0.1.12"
+version = "0.1.13"
 description = "A collection of utility functions for the Dogscogs project."
 authors = [
     { name = "klypto", email = "klypyon@gmail.com"}
