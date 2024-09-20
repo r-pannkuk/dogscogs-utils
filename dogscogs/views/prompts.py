@@ -42,8 +42,8 @@ class NumberPromptTextInput(discord.ui.TextInput):
     def __init__(
         self,
         *args,
-        min : typing.Optional[int] = None,
-        max : typing.Optional[int] = None,
+        min : typing.Optional[typing.Union[int, float]] = None,
+        max : typing.Optional[typing.Union[int, float]] = None,
         **kwargs,
     ):
         super().__init__(*args, **kwargs)
@@ -82,15 +82,21 @@ class NumberPromptModal(discord.ui.Modal):
         label: str,
         placeholder: str,
         custom_id: str,
-        min: int,
-        max: int,
-        default: typing.Optional[int] = None,
+        min: float,
+        max: float,
+        default: typing.Optional[float] = None,
+        use_float: bool = False,
         row: int = 0,
     ):
         super().__init__(
             timeout=10 * 60,
             title=title,
         )
+
+        if not use_float:
+            min = int(min)
+            max = int(max)
+            default = int(default) if default is not None else None
 
         self.item: NumberPromptTextInput = NumberPromptTextInput(
             label=label,
