@@ -105,7 +105,7 @@ class NumberPromptModal(discord.ui.Modal):
             style=discord.TextStyle.short,
             custom_id=custom_id,
             row=row,
-            default=str(default),
+            default=str(default) if default is not None else None,
             min=min,
             max=max,
         )
