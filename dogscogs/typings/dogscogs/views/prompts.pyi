@@ -3,6 +3,7 @@ from ..converters.percent import Percent as Percent
 from _typeshed import Incomplete
 
 class ValidRoleTextInput(discord.ui.TextInput):
+    role: discord.Role
     async def interaction_check(self, interaction: discord.Interaction) -> bool: ...
     async def on_submit(self, interaction: discord.Interaction): ...
 

@@ -7,6 +7,8 @@ from discord.ext import commands
 from ..converters.percent import Percent
 
 class ValidRoleTextInput(discord.ui.TextInput):
+    role: discord.Role
+    
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         try:
             class FakeContext():
@@ -23,6 +25,13 @@ class ValidRoleTextInput(discord.ui.TextInput):
         return True
     
     async def on_submit(self, interaction: discord.Interaction):
+        class FakeContext():
+            guild: discord.Guild
+
+        ctx = FakeContext()
+        ctx.guild = interaction.guild # type: ignore[assignment]
+
+        self.role = await commands.RoleConverter().convert(ctx, self.value) # type: ignore[arg-type]
         await interaction.response.defer()
 
 class ValidImageURLTextInput(discord.ui.TextInput):
