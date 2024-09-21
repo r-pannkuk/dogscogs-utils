@@ -2,7 +2,28 @@ import typing
 import discord
 import requests
 
+from discord.ext import commands
+
 from ..converters.percent import Percent
+
+class ValidRoleTextInput(discord.ui.TextInput):
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        try:
+            class FakeContext():
+                guild: discord.Guild
+
+            ctx = FakeContext()
+            ctx.guild = interaction.guild # type: ignore[assignment]
+
+            role = await commands.RoleConverter().convert(ctx, self.value) # type: ignore[arg-type]
+        except:
+            await interaction.response.send_message("❌ ERROR: Please enter a valid role.", ephemeral=True, delete_after=15)
+            return False
+
+        return True
+    
+    async def on_submit(self, interaction: discord.Interaction):
+        await interaction.response.defer()
 
 class ValidImageURLTextInput(discord.ui.TextInput):
     def __init__(
