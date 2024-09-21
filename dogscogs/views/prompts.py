@@ -7,7 +7,7 @@ from discord.ext import commands
 from ..converters.percent import Percent
 
 class ValidRoleTextInput(discord.ui.TextInput):
-    role: discord.Role
+    role: typing.Union[None, discord.Role] = None
     
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         try:
@@ -17,22 +17,17 @@ class ValidRoleTextInput(discord.ui.TextInput):
             ctx = FakeContext()
             ctx.guild = interaction.guild # type: ignore[assignment]
 
-            role = await commands.RoleConverter().convert(ctx, self.value) # type: ignore[arg-type]
+            value = self.value
+
+            if value.startswith('@'):
+                value = value[1:]
+
+            self.role = await commands.RoleConverter().convert(ctx, value) # type: ignore[arg-type]
         except:
             await interaction.response.send_message("❌ ERROR: Please enter a valid role.", ephemeral=True, delete_after=15)
             return False
 
         return True
-    
-    async def on_submit(self, interaction: discord.Interaction):
-        class FakeContext():
-            guild: discord.Guild
-
-        ctx = FakeContext()
-        ctx.guild = interaction.guild # type: ignore[assignment]
-
-        self.role = await commands.RoleConverter().convert(ctx, self.value) # type: ignore[arg-type]
-        await interaction.response.defer()
 
 class ValidImageURLTextInput(discord.ui.TextInput):
     def __init__(
@@ -63,9 +58,6 @@ class ValidImageURLTextInput(discord.ui.TextInput):
         except:
             await interaction.response.send_message("❌ ERROR: Please enter a valid image URL.", ephemeral=True, delete_after=15)
             return False
-        
-    async def on_submit(self, interaction: discord.Interaction):
-        await interaction.response.defer()
 
 
 class NumberPromptTextInput(discord.ui.TextInput):
@@ -96,9 +88,6 @@ class NumberPromptTextInput(discord.ui.TextInput):
             return False
 
         return True
-    
-    async def on_submit(self, interaction: discord.Interaction):
-        await interaction.response.defer()
 
     
         
