@@ -33,14 +33,14 @@ class ValidImageURLTextInput(discord.ui.TextInput):
     def __init__(
         self,
         *args,
-        valid_extensions: typing.List[str] = [".png", ".jpg", ".jpeg", ".gif"],
+        valid_extensions: typing.List[str] = ["png", "jpg", "jpeg", "gif"],
         **kwargs
     ):
         super().__init__(*args, **kwargs)
         self.valid_extensions = valid_extensions
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
-        extension = self.value.split(".")[-1]
+        extension = self.value.lower().split(".")[-1]
 
         if extension not in self.valid_extensions:
             await interaction.response.send_message(f"❌ ERROR: Only the following image extensions are supported: {', '.join(self.valid_extensions)}.", ephemeral=True, delete_after=15)

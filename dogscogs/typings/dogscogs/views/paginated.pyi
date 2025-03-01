@@ -9,10 +9,10 @@ class OnCallbackSelect(discord.ui.Select):
 
 class PaginatedEmbed(discord.ui.View):
     message: discord.Message
-    original_message: Incomplete
-    interaction: Incomplete
+    original_message: discord.Message | None
+    interaction: discord.Interaction | None
     author: Incomplete
-    get_page: Incomplete
+    get_page: typing.Callable[[int], typing.Awaitable[tuple[discord.Embed, int]]]
     total_pages: int
     index: int
     def __init__(self, *args, message: discord.Message | None = None, interaction: discord.Interaction | None = None, get_page: typing.Callable[[int], typing.Awaitable[tuple[discord.Embed, int]]], **kwargs) -> None: ...

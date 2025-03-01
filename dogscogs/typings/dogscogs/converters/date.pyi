@@ -5,7 +5,7 @@ from _typeshed import Incomplete
 from collections.abc import Generator
 from redbot.core import commands as commands
 
-def date_formats() -> Generator[Incomplete, None, None]: ...
+def date_formats() -> Generator[Incomplete]: ...
 
 class BirthdayConverter(DogCogConverter):
     """Returns a datetime object ignoring the birthday for a birthday string.
