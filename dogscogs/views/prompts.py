@@ -48,7 +48,7 @@ class ValidImageURLTextInput(discord.ui.TextInput):
 
         try: 
             image_formats = (
-                f"image/{ext[1:]}" for ext in self.valid_extensions
+                f"image/{ext}" for ext in self.valid_extensions
             )
             r = requests.head(self.value)
             if r.headers["content-type"] not in image_formats:
