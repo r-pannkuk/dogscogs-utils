@@ -50,7 +50,9 @@ class ValidImageURLTextInput(discord.ui.TextInput):
             image_formats = (
                 f"image/{ext}" for ext in self.valid_extensions
             )
-            r = requests.head(self.value)
+            r = requests.head(self.value, headers={
+                "User-Agent": "Mozilla/5.0 (compatible; DiscordBot/1.0)"
+            }, timeout=10)
             if r.headers["content-type"] not in image_formats:
                 await interaction.response.send_message("❌ ERROR: Please enter a valid image URL.", ephemeral=True, delete_after=15)
                 return False
